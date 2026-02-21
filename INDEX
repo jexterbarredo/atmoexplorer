@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Layers of the Atmosphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#000;color:#fff;}
+
+#app{width:100vw;height:100vh;position:relative;overflow:hidden;}
+
+.screen{
+  position:absolute;inset:0;width:100%;height:100%;
+  transition:transform 0.8s cubic-bezier(0.77,0,0.18,1),opacity 0.8s ease,visibility 0s linear 0.8s;
+  isolation:isolate;overflow:hidden;visibility:hidden;
+}
+.screen.hidden-left  {transform:translateX(-100%);pointer-events:none;}
+.screen.hidden-right {transform:translateX(100%);pointer-events:none;}
+.screen.hidden-down  {transform:translateY(100%);pointer-events:none;}
+.screen.active       {transform:translate(0,0);opacity:1;pointer-events:all;visibility:visible;transition:transform 0.8s cubic-bezier(0.77,0,0.18,1),opacity 0.8s ease,visibility 0s linear 0s;}
+
+/* NAV BAR */
+#navbar{
+  position:fixed;top:0;left:0;right:0;height:56px;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;z-index:9999;
+  transition:opacity 0.5s ease, transform 0.5s ease;
+}
+#navbar.nav-hidden{opacity:0;transform:translateY(-100%);pointer-events:none;}
+.nav-logo{font-family:'Fredoka One',cursive;font-size:clamp(1rem,3.5vw,1.5rem);letter-spacing:1px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.nav-links{display:flex;gap:5px;flex-wrap:nowrap;}
+.nav-btn{
+  font-family:'Fredoka One',cursive;font-size:clamp(0.7rem,1.6vw,1rem);
+  padding:5px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;
+  transition:all 0.25s;white-space:nowrap;
+}
+.nav-btn:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.4);}
+.nav-btn.active-nav{background:rgba(255,255,255,0.22);border-color:#FFD93D;color:#FFD93D;}
+
+#nav-hamburger{display:none;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.2s;}
+#nav-hamburger:hover{background:rgba(255,255,255,0.1);}
+
+#nav-drawer{
+  display:none;position:fixed;top:56px;left:0;right:0;
+  background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  flex-direction:column;gap:0;z-index:9998;
+  transform:translateY(-10px);opacity:0;
+  transition:transform 0.3s ease,opacity 0.3s ease;
+}
+#nav-drawer.open{transform:translateY(0);opacity:1;}
+#nav-drawer .nav-btn{border-radius:0;border:none;border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 24px;font-size:1.2rem;text-align:left;background:transparent;}
+#nav-drawer .nav-btn:last-child{border-bottom:none;}
+#nav-drawer .nav-btn:hover{background:rgba(255,255,255,0.07);}
+#nav-drawer .nav-btn.active-nav{background:rgba(255,217,61,0.1);}
+
+@media(max-width:900px){
+  .nav-links{display:none;}
+  #nav-hamburger{display:block;}
+  #nav-drawer{display:flex;}
+}
+
+#nav-trigger{position:fixed;top:0;left:0;right:0;height:20px;z-index:9998;pointer-events:all;}
+
+/* HOME SCREEN */
+#screen-home{
+  background:linear-gradient(135deg,#000000 0%,#0a0a2e 40%,#000d1a 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#home-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.home-nebula{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;animation:nebPulse ease-in-out infinite alternate;}
+@keyframes nebPulse{0%{opacity:0.06;transform:scale(1)}100%{opacity:0.15;transform:scale(1.1)}}
+.home-content{position:relative;z-index:10;text-align:center;padding:0 16px;display:flex;flex-direction:column;align-items:center;gap:0;width:100%;}
+.home-badge{font-family:'Fredoka One',cursive;font-size:1.1rem;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:16px;border:1px solid rgba(255,255,255,0.15);padding:5px 18px;border-radius:50px;}
+.home-title{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(3.2rem,8vw,7.5rem);
+  line-height:1;letter-spacing:-2px;
+  background:linear-gradient(135deg,#fff 0%,#90d5ff 40%,#4a8ae6 70%,#8b5cf6 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px;
+  filter:drop-shadow(0 0 40px rgba(100,160,255,0.3));
+}
+.home-subtitle{font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:40px;}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:16px;width:100%;max-width:1100px;padding:0 4px;}
+.activity-card{
+  width:100%;background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:26px 24px 22px;
+  cursor:pointer;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.35s,border-color 0.35s;
+  position:relative;overflow:hidden;text-align:left;
+}
+.activity-card::before{content:'';position:absolute;inset:0;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,0.04),transparent);pointer-events:none;}
+.activity-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 24px 50px rgba(0,0,0,0.5);}
+.card-glow{position:absolute;width:180px;height:180px;border-radius:50%;filter:blur(50px);pointer-events:none;opacity:0;transition:opacity 0.4s;top:-50px;right:-50px;}
+.activity-card:hover .card-glow{opacity:1;}
+.card-icon{font-size:3.8rem;margin-bottom:12px;display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.4));}
+.card-tag{display:inline-block;font-size:0.9rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 12px;border-radius:50px;margin-bottom:10px;}
+.card-title{font-family:'Fredoka One',cursive;font-size:1.7rem;margin-bottom:6px;color:#fff;}
+.card-desc{font-size:1rem;font-weight:600;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:16px;}
+.card-cta{font-family:'Fredoka One',cursive;font-size:1.2rem;display:flex;align-items:center;gap:8px;color:#fff;transition:gap 0.25s;}
+.activity-card:hover .card-cta{gap:14px;}
+.cta-arrow{font-size:1.4rem;transition:transform 0.25s;}
+.activity-card:hover .cta-arrow{transform:translateX(4px);}
+
+.card-1:hover{border-color:rgba(255,107,107,0.5);box-shadow:0 24px 50px rgba(255,107,107,0.25);}
+.card-1 .card-tag{background:rgba(255,107,107,0.2);color:#FFD93D;border:1px solid rgba(255,107,107,0.3);}
+.card-1 .card-cta{color:#FFD93D;}
+.card-1 .card-glow{background:rgba(255,107,107,0.25);}
+
+.card-2:hover{border-color:rgba(74,222,128,0.5);box-shadow:0 24px 50px rgba(74,222,128,0.25);}
+.card-2 .card-tag{background:rgba(74,222,128,0.2);color:#4ade80;border:1px solid rgba(74,222,128,0.3);}
+.card-2 .card-cta{color:#4ade80;}
+.card-2 .card-glow{background:rgba(74,222,128,0.25);}
+
+.card-3:hover{border-color:rgba(192,132,252,0.5);box-shadow:0 24px 50px rgba(192,132,252,0.25);}
+.card-3 .card-tag{background:rgba(192,132,252,0.2);color:#c084fc;border:1px solid rgba(192,132,252,0.3);}
+.card-3 .card-cta{color:#c084fc;}
+.card-3 .card-glow{background:rgba(192,132,252,0.2);}
+
+.card-4:hover{border-color:rgba(144,213,255,0.5);box-shadow:0 24px 50px rgba(74,138,230,0.3);}
+.card-4 .card-tag{background:rgba(74,138,230,0.25);color:#90d5ff;border:1px solid rgba(74,138,230,0.3);}
+.card-4 .card-cta{color:#90d5ff;}
+.card-4 .card-glow{background:rgba(74,138,230,0.25);}
+
+.card-5:hover{border-color:rgba(251,146,60,0.5);box-shadow:0 24px 50px rgba(251,146,60,0.25);}
+.card-5 .card-tag{background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid rgba(251,146,60,0.3);}
+.card-5 .card-cta{color:#fb923c;}
+.card-5 .card-glow{background:rgba(251,146,60,0.22);}
+
+/* OBJECTIVES SCREEN */
+#screen-objectives{
+  background:linear-gradient(135deg,#000d1a 0%,#001a2e 50%,#000814 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+}
+.obj-wrap{position:relative;z-index:10;text-align:center;max-width:780px;width:90%;padding:20px;margin-top:56px;}
+.obj-badge{font-family:'Fredoka One',cursive;font-size:1.05rem;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);padding:5px 18px;border-radius:50px;display:inline-block;margin-bottom:18px;}
+.obj-title{font-family:'Fredoka One',cursive;font-size:clamp(2.8rem,6vw,4.5rem);color:#FFD93D;text-shadow:0 6px 30px rgba(255,217,61,0.35);margin-bottom:6px;}
+.obj-sub{font-size:1.4rem;color:rgba(255,255,255,0.55);font-weight:600;margin-bottom:32px;}
+.obj-cards{display:flex;flex-direction:column;gap:16px;width:100%;}
+.obj-card{display:flex;align-items:center;gap:18px;background:rgba(255,255,255,0.06);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:20px 26px;text-align:left;opacity:0;transform:translateX(-40px);transition:opacity 0.5s ease,transform 0.5s ease,border-color 0.3s,box-shadow 0.3s;}
+.obj-card.visible{opacity:1;transform:translateX(0);}
+.obj-card:hover{border-color:rgba(255,217,61,0.4);box-shadow:0 8px 32px rgba(255,217,61,0.12);}
+.obj-letter{font-family:'Fredoka One',cursive;font-size:2.2rem;width:64px;height:64px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,0.3);}
+.obj-letter.la{background:linear-gradient(135deg,#4A90D9,#2c6fb5);}
+.obj-letter.lb{background:linear-gradient(135deg,#9B5DE5,#6b35b5);}
+.obj-letter.lc{background:linear-gradient(135deg,#4ade80,#16a34a);}
+.obj-text{font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);line-height:1.5;}
+.obj-text em{font-style:normal;color:#FFD93D;}
+.obj-icon{font-size:2.8rem;flex-shrink:0;}
+.obj-footer{margin-top:28px;font-family:'Fredoka One',cursive;font-size:1.3rem;color:rgba(255,255,255,0.35);letter-spacing:1px;}
+
+/* UNSCRAMBLE SCREEN — ONE PER SLIDE */
+#screen-unscramble{
+  background:linear-gradient(135deg,#0a001a 0%,#1a0035 50%,#050010 100%);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.unscr-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+
+/* Slide-based unscramble */
+.us-slide{
+  position:absolute;inset:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px 40px;
+  transform:translateX(100%);
+  transition:transform 0.7s cubic-bezier(0.77,0,0.18,1);
+  z-index:5;
+}
+.us-slide.us-slide-active{transform:translateX(0%);}
+.us-slide.us-slide-exited{transform:translateX(-100%);}
+
+/* Intro slide */
+#us-slide-intro{background:transparent;}
+.us-intro-content{position:relative;z-index:10;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.us-intro-badge{font-family:'Fredoka One',cursive;font-size:1.05rem;letter-spacing:3px;color:rgba(255,255,255,0.4);text-transform:uppercase;border:1px solid rgba(255,255,255,0.12);padding:4px 16px;border-radius:50px;display:inline-block;}
+.us-intro-title{font-family:'Fredoka One',cursive;font-size:clamp(2.8rem,8vw,5rem);color:#c084fc;text-shadow:0 6px 30px rgba(192,132,252,0.4);}
+.us-intro-sub{font-size:1.3rem;color:rgba(255,255,255,0.6);font-weight:700;max-width:600px;line-height:1.6;}
+.us-start-btn{font-family:'Fredoka One',cursive;font-size:1.7rem;color:#1a1a2e;background:linear-gradient(135deg,#c084fc,#7c3aed);border:none;border-radius:50px;padding:14px 48px;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.3),0 10px 30px rgba(192,132,252,0.4);transition:transform 0.15s;margin-top:8px;animation:bounceIn2 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both;}
+.us-start-btn:hover{transform:translateY(-3px);}
+
+/* Question slides */
+.us-q-wrap{position:relative;z-index:10;width:100%;max-width:720px;display:flex;flex-direction:column;gap:20px;}
+.us-top-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.us-progress-track{flex:1;height:8px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);overflow:hidden;}
+.us-progress-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#c084fc,#60a5fa);transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+.us-step-pill{font-family:'Fredoka One',cursive;font-size:1.1rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50px;padding:4px 14px;white-space:nowrap;}
+.us-score-pill{font-family:'Fredoka One',cursive;font-size:1.1rem;color:#c084fc;background:rgba(192,132,252,0.12);border:1px solid rgba(192,132,252,0.3);border-radius:50px;padding:4px 14px;white-space:nowrap;}
+
+.us-card{
+  background:rgba(255,255,255,0.06);backdrop-filter:blur(16px);
+  border:1px solid rgba(192,132,252,0.25);border-radius:24px;
+  padding:28px 32px;
+  animation:fadeUp2 0.5s ease both;
+}
+.us-num-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.us-num{font-family:'Fredoka One',cursive;font-size:1.4rem;width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#9B5DE5,#6b35b5);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 0 rgba(0,0,0,0.3);}
+.us-scrambled{font-family:'Fredoka One',cursive;font-size:3.75rem;letter-spacing:8px;color:#FFD93D;line-height:1.2;}
+.us-def{font-size:1.6rem;color:rgba(255,255,255,0.85);font-weight:700;line-height:1.65;margin-bottom:18px;border-left:4px solid rgba(192,132,252,0.6);padding-left:16px;}
+.us-answer-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.us-label{font-size:1rem;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+.us-input{
+  flex:1;min-width:160px;max-width:300px;height:48px;
+  border-radius:14px;border:2px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-family:'Fredoka One',cursive;font-size:1.35rem;letter-spacing:3px;
+  padding:0 16px;outline:none;text-transform:uppercase;
+  transition:border-color 0.2s,background 0.2s,box-shadow 0.2s;
+}
+.us-input:focus{border-color:#c084fc;background:rgba(192,132,252,0.1);box-shadow:0 0 0 3px rgba(192,132,252,0.15);}
+.us-input.ucorrect{background:rgba(74,222,128,0.15);border-color:#4ade80;color:#4ade80;animation:popIn2 0.3s ease;}
+.us-input.uwrong  {background:rgba(248,113,113,0.15);border-color:#f87171;color:#f87171;animation:shake2 0.4s ease;}
+.us-check-btn{font-family:'Fredoka One',cursive;font-size:1.15rem;color:#fff;background:linear-gradient(135deg,#9B5DE5,#6b35b5);border:none;border-radius:50px;padding:10px 22px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,0.3);transition:transform 0.15s;white-space:nowrap;}
+.us-check-btn:hover{transform:translateY(-2px);}
+.us-feedback{font-size:1.1rem;font-weight:800;margin-top:10px;min-height:20px;}
+.ufb-ok{color:#4ade80;}.ufb-err{color:#f87171;}
+.us-next-btn{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#fff;background:linear-gradient(135deg,#4ade80,#16a34a);border:none;border-radius:50px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,0.3);transition:transform 0.15s;display:none;animation:nextAppear2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;white-space:nowrap;}
+.us-next-btn.show{display:inline-flex;align-items:center;gap:6px;}
+.us-next-btn:hover{transform:translateY(-2px);}
+
+/* End slide */
+#us-slide-end{background:transparent;}
+.us-end-content{position:relative;z-index:10;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.us-end-emoji{font-size:5rem;animation:spinBounce2 1s cubic-bezier(0.34,1.56,0.64,1) both;}
+.us-end-title{font-family:'Fredoka One',cursive;font-size:clamp(3rem,8vw,5rem);color:#FFD93D;text-shadow:0 6px 30px rgba(255,217,61,0.4);}
+.us-end-sub{font-size:1.4rem;color:rgba(255,255,255,0.7);font-weight:700;}
+.us-score-big{font-family:'Fredoka One',cursive;font-size:4rem;color:#fff;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);border-radius:20px;padding:12px 40px;}
+.us-recap-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.us-recap-chip{font-family:'Fredoka One',cursive;font-size:1.2rem;padding:7px 18px;border-radius:50px;background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.3);color:#c084fc;animation:chipPop2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+.us-replay-btn{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#1a1a2e;background:linear-gradient(135deg,#c084fc,#7c3aed);border:none;border-radius:50px;padding:13px 40px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,0.25),0 8px 24px rgba(192,132,252,0.3);transition:transform 0.15s;}
+.us-replay-btn:hover{transform:translateY(-2px);}
+
+/* Key panel */
+.us-key-btn{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1a1a2e;background:linear-gradient(135deg,#FFD93D,#f59e0b);border:none;border-radius:50px;padding:11px 30px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.25);transition:transform 0.15s;}
+.us-key-btn:hover{transform:translateY(-2px);}
+.us-key-panel{margin-top:10px;background:rgba(255,217,61,0.07);border:1px solid rgba(255,217,61,0.25);border-radius:16px;padding:18px 24px;display:none;animation:fadeUp2 0.4s ease both;}
+.us-key-panel.show{display:block;}
+.key-title{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#FFD93D;margin-bottom:12px;}
+.key-row{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;font-size:1.2rem;font-weight:700;}
+.key-n{color:#FFD93D;font-family:'Fredoka One',cursive;font-size:1.3rem;}
+.key-word{color:#fff;letter-spacing:2px;}
+.key-scrambled{color:rgba(255,255,255,0.4);font-size:1rem;letter-spacing:2px;}
+
+/* BACK BUTTON */
+.back-fab{position:fixed;top:68px;left:20px;z-index:9998;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:all 0.4s ease;color:#fff;}
+.back-fab:hover{background:rgba(255,255,255,0.22);transform:scale(1.1);}
+.back-fab.show{display:flex;}
+
+/* JOURNEY & ACTIVITY */
+#screen-journey{background:#000;}
+#screen-activity{background:#0a0014;}
+
+/* FLASH OVERLAY */
+#flash-overlay{position:fixed;inset:0;z-index:99999;background:#000;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+
+/* ════════════════════════════════════
+   ATMOSPHERE JOURNEY STYLES
+   ════════════════════════════════════ */
+:root{--glass-bg:rgba(255,255,255,0.08);--glass-border:rgba(255,255,255,0.15);--glass-blur:blur(16px);}
+#viewport{width:100%;height:100%;overflow:hidden;position:relative;}
+#presentation{width:100vw;height:600vh;position:absolute;top:0;left:0;transition:transform 2s cubic-bezier(0.65,0,0.35,1);will-change:transform;}
+.slide{position:absolute;left:0;width:100vw;height:100vh;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;text-align:center;padding:2% 10% 2%;overflow:hidden;}
+#space-top   {top:0vh;  background:linear-gradient(to bottom,#000000,#02010a);}
+#thermosphere{top:100vh;background:linear-gradient(to bottom,#02010a,#150936);}
+#mesosphere  {top:200vh;background:linear-gradient(to bottom,#150936,#0a1142);}
+#stratosphere{top:300vh;background:linear-gradient(to bottom,#0a1142,#2a5ab5);}
+#troposphere {top:400vh;background:linear-gradient(to bottom,#2a5ab5,#90d5ff);}
+#space-bottom{top:500vh;background:linear-gradient(to bottom,#90d5ff,#3a7d44);}
+.content-wrapper{max-width:1000px;width:100%;display:flex;flex-direction:column;align-items:center;z-index:10;position:relative;}
+.slide h1{font-size:clamp(3.5rem,6vw,6.5rem);font-weight:800;letter-spacing:-2px;margin:0 0 10px 0;text-shadow:0 10px 30px rgba(0,0,0,0.6);}
+.info-card{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:24px;padding:20px 40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);width:100%;}
+.slide p{font-size:clamp(1.5rem,2.5vw,2.1rem);line-height:1.5;font-weight:300;margin:0;color:rgba(255,255,255,0.9);}
+.altitude-badge{display:inline-block;background:rgba(255,255,255,0.15);padding:10px 26px;border-radius:50px;font-size:1.4rem;font-weight:600;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.3);}
+.icon{font-size:clamp(5rem,9vw,8rem);margin-bottom:20px;display:inline-block;filter:drop-shadow(0px 10px 20px rgba(0,0,0,0.4));}
+#icon-troposphere {animation:floatCloud 4s ease-in-out infinite;}
+#icon-stratosphere{animation:flyPlane 3.5s ease-in-out infinite;}
+#icon-mesosphere  {animation:swoopMeteor 1.5s ease-in-out infinite;}
+#icon-thermosphere{animation:pulseGalaxy 5s ease-in-out infinite;}
+@keyframes floatCloud {0%{transform:translateX(-15px) translateY(0)}50%{transform:translateX(15px) translateY(-10px)}100%{transform:translateX(-15px) translateY(0)}}
+@keyframes flyPlane   {0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-15px) rotate(8deg)}100%{transform:translateY(0) rotate(0deg)}}
+@keyframes swoopMeteor{0%{transform:translate(15px,-15px)}50%{transform:translate(-15px,15px)}100%{transform:translate(15px,-15px)}}
+@keyframes pulseGalaxy{0%{transform:scale(0.9) rotate(-5deg);filter:drop-shadow(0 0 10px rgba(255,255,255,0.2))}50%{transform:scale(1.1) rotate(5deg);filter:drop-shadow(0 0 30px rgba(255,255,255,0.8))}100%{transform:scale(0.9) rotate(-5deg);filter:drop-shadow(0 0 10px rgba(255,255,255,0.2))}}
+.definition-text-moved{position:relative;z-index:30;width:100%;margin-bottom:15px;}
+.earth-model-container{position:relative;width:650px;height:650px;display:flex;justify-content:center;align-items:center;transform-style:preserve-3d;transform:rotateX(65deg) rotateY(0deg);margin-top:-80px;}
+.earth-shadow-base{position:absolute;width:130px;height:130px;border-radius:50%;box-shadow:inset -25px -15px 40px rgba(0,0,0,0.9),inset 10px 10px 20px rgba(255,255,255,0.2),0 0 30px rgba(66,165,245,0.5);transform:rotateX(-65deg) rotateY(0deg);z-index:10;overflow:hidden;}
+.earth-map{width:100%;height:100%;background-color:#1565C0;background-image:radial-gradient(circle at 30% 30%,#4CAF50 15%,transparent 25%),radial-gradient(circle at 70% 50%,#2E7D32 20%,transparent 35%),radial-gradient(circle at 35% 70%,#8BC34A 12%,transparent 20%),radial-gradient(circle at 50% 5%,#FFF 10%,transparent 15%),radial-gradient(circle at 50% 95%,#FFF 10%,transparent 15%);animation:spinEarth 24s linear infinite;}
+.atm-layer{position:absolute;border-radius:50%;border-style:dashed;opacity:0.8;}
+.layer-label{position:absolute;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);padding:10px 18px;border-radius:12px;font-size:1rem;font-weight:500;letter-spacing:0.5px;box-shadow:0 5px 15px rgba(0,0,0,0.6);z-index:20;white-space:pre-wrap;text-align:left;min-width:200px;}
+.layer-label strong{display:block;font-size:1.15rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}.layer-temp{display:block;font-size:0.88rem;font-weight:700;opacity:0.85;margin-top:2px;}.layer-alt-text{display:block;font-size:0.9rem;opacity:0.7;margin-bottom:2px;}
+.connector-line{position:absolute;top:50%;height:2px;transform:translateY(-50%);z-index:-1;}
+#earth-canvas-3d{display:none;}
+/* Label Me slides */
+.lm-slide{position:absolute;inset:0;width:100%;height:100%;transition:transform 0.65s cubic-bezier(0.77,0,0.18,1),opacity 0.65s ease;will-change:transform,opacity;}
+.lm-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.25);cursor:pointer;transition:background 0.25s,transform 0.25s;}
+.lm-dot.lm-dot-active{background:#fff;transform:scale(1.25);}
+@keyframes spin     {0%{transform:rotateZ(0deg)}100%{transform:rotateZ(360deg)}}
+@keyframes spinEarth{0%{transform:rotateZ(0deg)}100%{transform:rotateZ(360deg)}}
+#rocket-companion{position:absolute;left:5%;top:50%;margin-top:-3rem;z-index:500;font-size:4rem;display:flex;justify-content:center;align-items:center;transition:transform 0.6s cubic-bezier(0.65,0,0.35,1);}
+.rocket-emoji{display:inline-block;transform:rotate(-45deg);position:relative;z-index:2;filter:drop-shadow(0px 5px 10px rgba(0,0,0,0.5));}
+.exhaust{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);width:15px;height:0;background:linear-gradient(to bottom,#fff,#ffeb3b,#ff5722,transparent);border-radius:50px;opacity:0;z-index:1;transition:opacity 0.2s,height 0.2s;filter:blur(2px);}
+.face-up  {transform:rotate(0deg);}
+.face-down{transform:rotate(180deg);}
+#rocket-companion.thrusting{animation:rocketShake 0.1s infinite alternate;}
+#rocket-companion.thrusting .exhaust{opacity:1;height:50px;animation:exhaustFlicker 0.1s infinite alternate;}
+@keyframes rocketShake   {0%{margin-left:-2px}100%{margin-left:2px}}
+@keyframes exhaustFlicker{0%{height:40px;opacity:0.8}100%{height:60px;opacity:1}}
+.layer-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+.aurora-band{position:absolute;left:-10%;width:120%;height:120px;border-radius:60%;filter:blur(28px);opacity:0;animation:auroraPulse 6s ease-in-out infinite;}
+.aurora-band:nth-child(1){top:15%;background:linear-gradient(90deg,transparent,#00ff88,#00ccff,transparent);animation-delay:0s;}
+.aurora-band:nth-child(2){top:30%;background:linear-gradient(90deg,transparent,#aa00ff,#ff66cc,transparent);animation-delay:1.5s;}
+.aurora-band:nth-child(3){top:55%;background:linear-gradient(90deg,transparent,#00ccff,#0066ff,transparent);animation-delay:3s;}
+.aurora-band:nth-child(4){top:70%;background:linear-gradient(90deg,transparent,#ff66cc,#aa00ff,transparent);animation-delay:4.5s;}
+@keyframes auroraPulse{0%{opacity:0;transform:scaleX(0.9) translateY(0px)}30%{opacity:0.55}60%{opacity:0.35;transform:scaleX(1.05) translateY(-20px)}100%{opacity:0;transform:scaleX(0.9) translateY(0px)}}
+.satellite{position:absolute;font-size:2.2rem;animation:satOrbit 14s linear infinite;filter:drop-shadow(0 0 6px rgba(255,255,255,0.6));z-index:5;}
+@keyframes satOrbit{0%{left:-8%;top:18%;transform:rotate(0deg)}50%{left:105%;top:62%}100%{left:-8%;top:18%;transform:rotate(0deg)}}
+.uv-ray{position:absolute;top:0;width:3px;height:60%;border-radius:2px;opacity:0;animation:uvRay 3.5s ease-in-out infinite;}
+@keyframes uvRay{0%{opacity:0;transform:scaleY(0.4)}40%{opacity:0.35;transform:scaleY(1)}70%{opacity:0.2}100%{opacity:0;transform:scaleY(0.4)}}
+.ozone-layer{position:absolute;left:0;right:0;height:60px;opacity:0.18;background:linear-gradient(to bottom,transparent,#7ecfff,transparent);filter:blur(12px);animation:ozoneShimmer 5s ease-in-out infinite alternate;}
+@keyframes ozoneShimmer{0%{opacity:0.12;transform:scaleY(0.8)}100%{opacity:0.28;transform:scaleY(1.2)}}
+.cloud-puff{position:absolute;border-radius:50%;filter:blur(18px);opacity:0;animation:cloudDrift linear infinite;}
+@keyframes cloudDrift{0%{transform:translateX(0);opacity:0}10%{opacity:1}90%{opacity:0.7}100%{transform:translateX(110vw);opacity:0}}
+.lightning{position:absolute;width:3px;background:linear-gradient(to bottom,#fff8a0,#ffe500,transparent);border-radius:2px;opacity:0;filter:blur(1px);animation:strike 8s ease-in-out infinite;}
+.lightning::after{content:'';position:absolute;top:40%;left:-5px;width:12px;height:3px;background:inherit;border-radius:2px;transform:rotate(45deg);}
+@keyframes strike{0%,92%,96%,100%{opacity:0}93%,95%{opacity:1;box-shadow:0 0 20px #fff8a0,0 0 60px #ffe500}}
+.raindrop{position:absolute;top:-10px;width:2px;border-radius:2px;background:linear-gradient(to bottom,transparent,rgba(180,220,255,0.7));animation:rain linear infinite;opacity:0.7;}
+@keyframes rain{0%{transform:translateY(-20px) rotate(8deg);opacity:0}10%{opacity:0.7}100%{transform:translateY(110vh) rotate(8deg);opacity:0}}
+.meteor{position:absolute;height:2px;border-radius:2px;background:linear-gradient(to right,rgba(255,255,255,0),#fff,#ffcc44);animation:meteorFall linear infinite;box-shadow:0 0 6px rgba(255,200,50,0.8);}
+@keyframes meteorFall{0%{transform:translate(0,0) rotate(-45deg);opacity:1}80%{opacity:0.8}100%{transform:translate(300px,300px) rotate(-45deg);opacity:0}}
+.nebula{position:absolute;border-radius:50%;filter:blur(60px);animation:nebulaPulse ease-in-out infinite alternate;pointer-events:none;}
+@keyframes nebulaPulse{0%{opacity:0.06;transform:scale(1)}100%{opacity:0.14;transform:scale(1.12)}}
+.ground-surface{position:absolute;bottom:0;left:0;right:0;height:45%;z-index:2;background:linear-gradient(to bottom,#3a7d44 0%,#2d6235 40%,#1e4226 100%);border-radius:50% 50% 0 0 / 20px 20px 0 0;overflow:hidden;}
+.ground-detail{position:absolute;border-radius:50%;background:radial-gradient(circle,#4a9e55,#2d6235);filter:blur(4px);}
+.ground-tree{position:absolute;bottom:0;font-size:2.5rem;animation:treeSway 4s ease-in-out infinite;}
+@keyframes treeSway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.sun-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,100,0.6),transparent 70%);filter:blur(20px);animation:sunPulse 4s ease-in-out infinite alternate;}
+@keyframes sunPulse{0%{opacity:0.5;transform:translateX(-50%) scale(1)}100%{opacity:0.9;transform:translateX(-50%) scale(1.15)}}
+.bird{position:absolute;font-size:1.4rem;animation:birdFly linear infinite;}
+@keyframes birdFly{0%{left:-10%;opacity:0}5%{opacity:1}95%{opacity:1}100%{left:110%;opacity:0}}
+#altitude-gauge{position:absolute;right:28px;top:50%;transform:translateY(-50%);z-index:600;display:flex;flex-direction:column;align-items:flex-end;gap:0;pointer-events:none;}
+.gauge-wrap{display:flex;align-items:center;gap:10px;}
+#gauge-bar-track{width:10px;height:340px;background:rgba(255,255,255,0.08);border-radius:10px;border:1px solid rgba(255,255,255,0.15);position:relative;overflow:hidden;}
+#gauge-bar-fill{position:absolute;bottom:0;left:0;width:100%;border-radius:10px;transition:height 2s cubic-bezier(0.65,0,0.35,1),background 2s ease;}
+#gauge-ticks{display:flex;flex-direction:column;justify-content:space-between;height:340px;}
+.gauge-tick{display:flex;align-items:center;gap:5px;}
+.tick-line{width:8px;height:2px;background:rgba(255,255,255,0.4);border-radius:1px;transition:background 0.4s,width 0.4s;}
+.tick-label{font-size:0.85rem;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);text-align:right;white-space:nowrap;transition:color 0.4s;text-transform:uppercase;}
+.gauge-tick.active .tick-line{width:14px;background:#fff;}
+.gauge-tick.active .tick-label{color:#fff;font-size:0.9rem;}
+#gauge-readout{position:absolute;right:60px;z-index:601;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:8px 14px;text-align:right;pointer-events:none;transition:top 2s cubic-bezier(0.65,0,0.35,1),border-color 2s;min-width:130px;}
+#readout-layer{font-size:0.9rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+#readout-alt{font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.9);}
+#readout-alt span{font-size:1rem;opacity:0.6;margin-left:3px;}
+.journey-controls{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:15px;background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);padding:10px 15px;border-radius:100px;border:1px solid var(--glass-border);box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+.journey-controls button{padding:18px 42px;font-size:1.4rem;font-weight:600;letter-spacing:1px;cursor:pointer;border-radius:50px;background:transparent;color:white;border:1px solid transparent;transition:all 0.3s cubic-bezier(0.25,1,0.5,1);}
+.journey-controls button:hover:not(:disabled){background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);}
+.journey-controls button:disabled{opacity:0.3;cursor:not-allowed;}
+.arrow-hint{position:absolute;top:30px;right:40px;z-index:100;color:rgba(255,255,255,0.5);font-size:0.9rem;letter-spacing:1px;font-weight:500;}
+
+/* ACTIVITY STYLES */
+#screen-activity{overflow:hidden;}
+#act-stage{width:100%;height:100%;position:relative;overflow:hidden;}
+.layer-slide{position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:translateY(100%);transition:transform 1.2s cubic-bezier(0.77,0,0.18,1);overflow:hidden;}
+.layer-slide.active{transform:translateY(0%);}
+.layer-slide.exited{transform:translateY(-100%);}
+#slide-intro{background:linear-gradient(160deg,#0f0c29 0%,#302b63 50%,#24243e 100%);}
+#slide-q1   {background:linear-gradient(160deg,#0f2027 0%,#203a43 50%,#2c5364 100%);}
+#slide-q2   {background:linear-gradient(160deg,#1a0533 0%,#6a1a6a 50%,#1a0533 100%);}
+#slide-q3   {background:linear-gradient(160deg,#003d1f 0%,#006837 50%,#004d28 100%);}
+#slide-end  {background:linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);}
+.slide-canvas-act{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+#act-progress-strip{position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,0.1);z-index:100;}
+#act-progress-fill{height:100%;background:linear-gradient(90deg,#FFD93D,#FF6B6B,#9B5DE5);transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);width:0%;border-radius:0 4px 4px 0;}
+#act-step-dots{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:100;}
+.adot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.3);transition:background 0.4s,transform 0.4s;}
+.adot.done   {background:#4ade80;border-color:#4ade80;transform:scale(1.2);}
+.adot.current{background:#FFD93D;border-color:#FFD93D;transform:scale(1.3);animation:dotPulse2 1.2s ease-in-out infinite;}
+@keyframes dotPulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,217,61,0.4)}50%{box-shadow:0 0 0 6px rgba(255,217,61,0)}}
+#act-score-badge{position:absolute;top:8px;right:16px;z-index:100;font-family:'Fredoka One',cursive;font-size:1.35rem;color:#fff;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:5px 16px;}
+.star-ring{border-radius:50%;border:2px dashed rgba(255,255,255,0.12);animation:spinRing2 linear infinite;position:absolute;}
+@keyframes spinRing2{to{transform:rotate(360deg)}}
+.intro-content-act{position:relative;z-index:10;text-align:center;animation:fadeUp2 0.8s ease both;}
+@keyframes fadeUp2{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.intro-emoji-act{font-size:5rem;display:block;margin-bottom:12px;filter:drop-shadow(0 10px 30px rgba(255,255,255,0.2));}
+.intro-title-act{font-family:'Fredoka One',cursive;font-size:clamp(3.5rem,9vw,7rem);color:#fff;text-shadow:0 6px 30px rgba(100,150,255,0.5);letter-spacing:2px;margin-bottom:8px;}
+.intro-sub-act{font-size:clamp(1.3rem,3vw,1.8rem);color:rgba(255,255,255,0.7);font-weight:700;margin-bottom:24px;}
+.key-box-act{display:inline-flex;gap:14px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:12px 24px;margin-bottom:28px;}
+.key-item-act{font-family:'Fredoka One',cursive;font-size:1.6rem;display:flex;align-items:center;gap:4px;}
+.kl{color:#FFD93D;}.ks{color:rgba(255,255,255,0.4);font-size:1rem;}.kn{color:#FF6B6B;}
+.start-btn-act{font-family:'Fredoka One',cursive;font-size:1.9rem;color:#1a1a2e;background:linear-gradient(135deg,#FFD93D,#FF6B6B);border:none;border-radius:50px;padding:14px 48px;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.3),0 10px 30px rgba(255,107,107,0.4);transition:transform 0.15s,box-shadow 0.15s;animation:bounceIn2 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes bounceIn2{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+.start-btn-act:hover{transform:translateY(-3px);box-shadow:0 11px 0 rgba(0,0,0,0.3),0 14px 36px rgba(255,107,107,0.5);}
+.q-content-act{position:relative;z-index:10;width:100%;max-width:820px;padding:20px 20px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.riddle-label-act{font-weight:800;color:rgba(255,255,255,0.4);font-size:1.1rem;text-transform:uppercase;letter-spacing:3px;}
+.riddle-row-act{display:flex;gap:20px;align-items:flex-end;width:100%;justify-content:center;flex-wrap:wrap;}
+.q-char-act{font-size:clamp(3.5rem,7vw,5.5rem);filter:drop-shadow(0 8px 20px rgba(0,0,0,0.4));animation:charBob2 3s ease-in-out infinite;}
+@keyframes charBob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.speech-wrap-act{flex:1;min-width:220px;max-width:520px;}
+.speech-bubble-act{background:rgba(255,255,255,0.1);backdrop-filter:blur(16px);border:2px solid rgba(255,255,255,0.2);border-radius:24px 24px 24px 4px;padding:18px 22px;}
+.riddle-text-act{font-size:clamp(1.3rem,3vw,1.75rem);font-weight:700;color:#fff;line-height:1.7;white-space:pre-wrap;}
+.what-am-i-text-act{font-family:'Fredoka One',cursive;font-size:1.3em;color:#FFD93D;display:block;margin-top:4px;}
+.decode-card-act{width:100%;background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);border-radius:22px;padding:20px 24px;}
+.decode-label-act{font-weight:800;color:rgba(255,255,255,0.5);font-size:1.1rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;}
+.cipher-row-act{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
+.tile-group-act{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.cipher-top-act{width:56px;height:56px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:1.6rem;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,0.25);transition:transform 0.2s;}
+.cipher-top-act:hover{transform:translateY(-2px);}
+.num-tile-act{background:linear-gradient(135deg,#FF6B6B,#c0392b);}
+.letter-tile-act{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);}
+.answer-input-act{width:56px;height:56px;border-radius:13px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:'Fredoka One',cursive;font-size:1.6rem;text-align:center;outline:none;transition:border-color 0.2s,background 0.2s,transform 0.15s;text-transform:uppercase;backdrop-filter:blur(4px);}
+.answer-input-act:focus{border-color:#FFD93D;background:rgba(255,217,61,0.1);transform:scale(1.08);box-shadow:0 0 0 3px rgba(255,217,61,0.2);}
+.answer-input-act.correct{background:rgba(74,222,128,0.2);border-color:#4ade80;color:#4ade80;animation:popIn2 0.3s ease;}
+.answer-input-act.wrong  {background:rgba(248,113,113,0.2);border-color:#f87171;color:#f87171;animation:shake2 0.4s ease;}
+.answer-input-act:disabled{opacity:0.6;cursor:default;}
+.answer-input-act.prefilled{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);cursor:default;}
+@keyframes popIn2{0%{transform:scale(0.7)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes shake2{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.action-row-act{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.abtn{font-family:'Fredoka One',cursive;font-size:1.35rem;color:#fff;border:none;border-radius:50px;padding:11px 30px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;display:flex;align-items:center;gap:7px;}
+.abtn:hover{transform:translateY(-2px);}
+.abtn:active{transform:translateY(2px);}
+.abtn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+.abtn-check{background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 5px 0 #15803d,0 7px 20px rgba(74,222,128,0.3);}
+.abtn-hint {background:linear-gradient(135deg,#FFD93D,#f59e0b);box-shadow:0 5px 0 #d97706,0 7px 20px rgba(255,217,61,0.3);color:#1a1a2e;}
+.abtn-next {background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 5px 0 #1d4ed8,0 7px 20px rgba(96,165,250,0.3);display:none;animation:nextAppear2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes nextAppear2{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+.feedback-act{margin-top:2px;font-weight:800;font-size:1.25rem;min-height:22px;text-align:center;transition:opacity 0.3s;}
+.fb-ok2  {color:#4ade80;}.fb-err2{color:#f87171;}.fb-hint2{color:#FFD93D;}
+.word-reveal-act{font-family:'Fredoka One',cursive;font-size:3rem;letter-spacing:5px;color:#FFD93D;text-shadow:0 0 30px rgba(255,217,61,0.5);display:none;animation:wordPop2 0.5s cubic-bezier(0.34,1.56,0.64,1) both;text-align:center;}
+@keyframes wordPop2{from{opacity:0;transform:scale(0.5) rotate(-5deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+.end-content-act{position:relative;z-index:10;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.end-emoji-act{font-size:5rem;animation:spinBounce2 1s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes spinBounce2{from{opacity:0;transform:scale(0) rotate(-180deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+.end-title-act{font-family:'Fredoka One',cursive;font-size:clamp(3.5rem,8vw,5.5rem);color:#FFD93D;text-shadow:0 6px 30px rgba(255,217,61,0.4);}
+.end-sub-act{font-size:1.5rem;color:rgba(255,255,255,0.7);font-weight:700;}
+.score-display-act{font-family:'Fredoka One',cursive;font-size:4.5rem;color:#fff;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);border-radius:20px;padding:14px 42px;}
+.answers-recap-act{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.recap-chip-act{font-family:'Fredoka One',cursive;font-size:1.4rem;padding:8px 20px;border-radius:50px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;animation:chipPop2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes chipPop2{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+.btn-restart-act{font-family:'Fredoka One',cursive;font-size:1.7rem;color:#1a1a2e;background:linear-gradient(135deg,#FFD93D,#FF6B6B);border:none;border-radius:50px;padding:14px 46px;cursor:pointer;box-shadow:0 7px 0 rgba(0,0,0,0.25),0 10px 30px rgba(255,107,107,0.3);transition:transform 0.15s;}
+.btn-restart-act:hover{transform:translateY(-3px);}
+.confetti-piece{position:fixed;pointer-events:none;z-index:99999;border-radius:3px;animation:confFall2 linear forwards;}
+@keyframes confFall2{0%{opacity:1;transform:translateY(-30px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(110vh) rotate(720deg) scale(0.3)}}
+.act-deco{position:absolute;pointer-events:none;z-index:1;}
+.heat-rise{animation:heatRiseAct ease-in-out infinite alternate;}
+@keyframes heatRiseAct{0%{transform:scaleY(0.5) translateY(0);opacity:0.3}100%{transform:scaleY(1.3) translateY(-20px);opacity:0.8}}
+.mountain-sil{position:absolute;bottom:0;clip-path:polygon(0% 100%,50% 0%,100% 100%);}
+.atm-wave-act{position:absolute;border-radius:50%;border:3px solid rgba(100,200,255,0.12);animation:waveExpAct ease-out infinite;}
+@keyframes waveExpAct{0%{transform:scale(0.5);opacity:0.5}100%{transform:scale(2.2);opacity:0}}
+
+/* GENERALIZATION SCREEN */
+#screen-generalization{background:linear-gradient(135deg,#0d0800 0%,#1a0f00 40%,#0a0500 100%);overflow:hidden;}
+.gen-inner{position:absolute;top:56px;left:0;right:0;bottom:0;z-index:10;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;padding:36px 20px 60px;scrollbar-width:thin;scrollbar-color:rgba(255,200,80,0.2) transparent;}
+.gen-inner::-webkit-scrollbar{width:6px;}
+.gen-inner::-webkit-scrollbar-thumb{background:rgba(255,200,80,0.2);border-radius:3px;}
+.gen-header{text-align:center;margin-bottom:40px;}
+.gen-badge{font-family:'Fredoka One',cursive;font-size:1.05rem;letter-spacing:3px;color:rgba(251,146,60,0.7);text-transform:uppercase;border:1px solid rgba(251,146,60,0.25);padding:5px 20px;border-radius:50px;display:inline-block;margin-bottom:16px;}
+.gen-title{font-family:'Fredoka One',cursive;font-size:clamp(2.6rem,6vw,4.2rem);color:#fb923c;text-shadow:0 6px 30px rgba(251,146,60,0.4);margin-bottom:8px;}
+.gen-sub{font-size:1.3rem;color:rgba(255,255,255,0.5);font-weight:600;}
+.gen-questions{display:flex;flex-direction:column;gap:28px;width:100%;max-width:900px;}
+.gen-block{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(251,146,60,0.15);border-radius:24px;overflow:hidden;opacity:0;transform:translateY(40px) scale(0.97);pointer-events:none;max-height:0;padding:0;transition:opacity 0.6s cubic-bezier(0.34,1.56,0.64,1),transform 0.6s cubic-bezier(0.34,1.56,0.64,1),max-height 0.5s ease,border-color 0.3s;}
+.gen-block.gen-active{opacity:1;transform:translateY(0) scale(1);pointer-events:all;max-height:800px;border-color:rgba(251,146,60,0.35);box-shadow:0 8px 32px rgba(251,146,60,0.12);}
+.gen-block.gen-done{opacity:0.7;transform:translateY(0) scale(1);pointer-events:none;max-height:800px;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.04);}
+.gen-block.gen-active:hover{border-color:rgba(251,146,60,0.55);}
+.gen-done-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Fredoka One',cursive;font-size:1rem;color:#4ade80;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:50px;padding:5px 16px;margin:0 28px 18px;animation:popIn2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+.gen-next-btn{font-family:'Fredoka One',cursive;font-size:clamp(1rem,2.5vw,1.3rem);color:#1a1a2e;background:linear-gradient(135deg,#fb923c,#c2410c);border:none;border-radius:50px;padding:12px 32px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.25),0 8px 24px rgba(251,146,60,0.3);transition:transform 0.15s;margin-top:8px;display:none;animation:nextAppear2 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
+.gen-next-btn:hover{transform:translateY(-2px);}
+.gen-next-btn.show{display:inline-flex;align-items:center;gap:8px;}
+.gen-reveal-btn{font-family:'Fredoka One',cursive;font-size:clamp(1rem,2.5vw,1.3rem);color:#fff;background:linear-gradient(135deg,#fb923c,#ea580c);border:none;border-radius:50px;padding:12px 32px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.25),0 8px 24px rgba(251,146,60,0.3);transition:transform 0.15s;animation:bounceIn2 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
+.gen-reveal-btn:hover{transform:translateY(-2px);}
+.gen-reveal-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.gen-progress-dots{display:flex;gap:12px;justify-content:center;margin-bottom:24px;}
+.gen-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);transition:all 0.4s;}
+.gen-dot.g-done{background:#4ade80;border-color:#4ade80;transform:scale(1.1);}
+.gen-dot.g-active{background:#fb923c;border-color:#fb923c;transform:scale(1.3);animation:dotPulse2 1.2s ease-in-out infinite;}
+.gen-q-header{display:flex;align-items:center;gap:18px;padding:22px 28px 18px;user-select:none;}
+.gen-q-num{font-family:'Fredoka One',cursive;font-size:1.5rem;width:52px;height:52px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fb923c,#c2410c);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,0.3);}
+.gen-q-text{font-family:'Fredoka One',cursive;font-size:clamp(1.3rem,3vw,1.7rem);color:#fff;line-height:1.35;flex:1;}
+.gen-answer-panel{max-height:0;overflow:hidden;transition:max-height 0.6s cubic-bezier(0.4,0,0.2,1),opacity 0.4s ease;opacity:0;}
+.gen-answer-panel.revealed{max-height:800px;opacity:1;}
+.gen-answer-inner{padding:0 28px 26px;display:flex;flex-direction:column;gap:16px;}
+.gen-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(251,146,60,0.3),transparent);margin-bottom:4px;}
+.gen-layer-chips{display:flex;gap:10px;flex-wrap:wrap;}
+.gen-chip{font-family:'Fredoka One',cursive;font-size:1.2rem;padding:9px 20px;border-radius:50px;display:flex;align-items:center;gap:8px;border:1px solid;animation:chipPop2 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+.chip-tropo  {background:rgba(144,213,255,0.12);border-color:rgba(144,213,255,0.4);color:#90d5ff;}
+.chip-strato {background:rgba(74,138,230,0.12);border-color:rgba(74,138,230,0.4);color:#60a5fa;}
+.chip-meso   {background:rgba(155,93,229,0.12);border-color:rgba(155,93,229,0.4);color:#c084fc;}
+.chip-thermo {background:rgba(244,63,94,0.15);border-color:rgba(244,63,94,0.4);color:#fb7185;}
+.chip-exo    {background:rgba(167,167,167,0.12);border-color:rgba(200,200,200,0.35);color:#e5e5e5;}
+.gen-answer-text{font-size:1.3rem;font-weight:700;color:rgba(255,255,255,0.88);line-height:1.7;}
+.gen-answer-text em{font-style:normal;color:#fb923c;}
+.gen-possible-label{font-family:'Fredoka One',cursive;font-size:1rem;letter-spacing:2px;color:rgba(251,146,60,0.6);text-transform:uppercase;margin-bottom:4px;}
+.gen-possible-card{background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:16px;padding:16px 22px;}
+.gen-possible-card p{font-size:1.3rem;font-weight:700;color:rgba(255,255,255,0.85);line-height:1.65;}
+.gen-possible-card p + p{margin-top:12px;}
+.gen-tap-hint{font-family:'Fredoka One',cursive;font-size:1.1rem;color:rgba(251,146,60,0.45);text-align:center;margin-top:4px;letter-spacing:1px;}
+.gen-wrapup{width:100%;max-width:900px;margin-top:8px;background:linear-gradient(135deg,rgba(251,146,60,0.08),rgba(255,217,61,0.06));border:1px solid rgba(251,146,60,0.2);border-radius:20px;padding:24px 32px;text-align:center;opacity:0;transform:translateY(20px);transition:opacity 0.6s ease 0.8s, transform 0.6s ease 0.8s;}
+.gen-wrapup.visible{opacity:1;transform:translateY(0);}
+.gen-wrapup-emoji{font-size:3rem;display:block;margin-bottom:10px;}
+.gen-wrapup-text{font-family:'Fredoka One',cursive;font-size:1.45rem;color:#FFD93D;line-height:1.5;}
+
+/* SHARED ANIMATIONS */
+@keyframes spinBounce2{from{opacity:0;transform:scale(0) rotate(-180deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .home-subtitle{font-size:clamp(0.95rem,2.5vw,1.3rem);}
+  .card-grid{grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:12px;}
+  #gauge-bar-track{height:220px;}
+  #gauge-ticks{height:220px;}
+}
+@media(max-width:640px){
+  .home-content{padding:0 12px;}
+  .home-title{font-size:clamp(2.4rem,12vw,4.5rem);letter-spacing:-1px;}
+  .home-subtitle{font-size:0.95rem;margin-bottom:24px;}
+  .home-badge{font-size:0.75rem;padding:4px 14px;}
+  .card-grid{grid-template-columns:1fr;gap:10px;max-width:400px;}
+  .activity-card{padding:18px 16px 14px;}
+  .card-icon{font-size:2.5rem;margin-bottom:8px;}
+  .card-title{font-size:1.4rem;}
+  .card-desc{font-size:0.9rem;}
+  .obj-wrap{padding:12px;}
+  .obj-title{font-size:clamp(1.8rem,8vw,3rem);}
+  .obj-text{font-size:1.1rem;}
+  .obj-letter{width:48px;height:48px;font-size:1.6rem;}
+  .obj-card{padding:14px 16px;gap:12px;}
+  .us-scrambled{font-size:1.1rem;letter-spacing:3px;}
+  .cipher-top-act,.answer-input-act{width:40px;height:40px;font-size:1.1rem;}
+  .riddle-row-act{flex-direction:column;align-items:center;}
+  .intro-title-act{font-size:clamp(2.5rem,10vw,5rem);}
+  .slide{padding:10% 5% 5%;}
+  .slide h1{font-size:clamp(2.2rem,7vw,4rem);}
+  .slide p{font-size:clamp(1rem,3vw,1.5rem);}
+  .journey-controls{padding:8px 10px;}
+  .journey-controls button{padding:12px 20px;font-size:0.95rem;}
+  #altitude-gauge{right:10px;}
+  #gauge-bar-track{height:180px;}
+  #gauge-ticks{height:180px;}
+  #gauge-readout{min-width:100px;padding:6px 10px;}
+  .tick-label{font-size:0.65rem;}
+  .earth-model-container{width:90vw;height:90vw;max-width:400px;max-height:400px;}
+  .arrow-hint{display:none;}
+  .us-card{padding:20px 18px;}
+  .us-input{font-size:1.1rem;min-width:120px;}
+}
+@media(hover:none){
+  .activity-card:hover{transform:none;box-shadow:none;}
+  .activity-card:active{transform:scale(0.98);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="flash-overlay"></div>
+<div id="nav-trigger"></div>
+
+<!-- NAV BAR — Order: Home, Motivation, Objectives, Unscramble, 3D Journey, Generalization -->
+<nav id="navbar">
+  <div class="nav-logo" onclick="goHome()">🌍 AtmoExplorer</div>
+  <div class="nav-links">
+    <button class="nav-btn" data-screen="home"           onclick="goHome()">🏠 Home</button>
+    <button class="nav-btn" data-screen="activity"       onclick="goActivity()">📝 Motivation</button>
+    <button class="nav-btn" data-screen="objectives"     onclick="goObjectives()">🎯 Objectives</button>
+    <button class="nav-btn" data-screen="unscramble"     onclick="goUnscramble()">🔤 Unscramble</button>
+    <button class="nav-btn" data-screen="journey"        onclick="goJourney()">🚀 3D Journey</button>
+    <button class="nav-btn" data-screen="generalization" onclick="goGeneralization()">💡 Generalization</button>
+    <button class="nav-btn" data-screen="labelme" onclick="goLabelMe()">🏷️ Label Me</button>
+  </div>
+  <button id="nav-hamburger" onclick="toggleDrawer()" aria-label="Menu">☰</button>
+</nav>
+
+<div id="nav-drawer">
+  <button class="nav-btn" data-screen="home"           onclick="goHome();closeDrawer()">🏠 Home</button>
+  <button class="nav-btn" data-screen="activity"       onclick="goActivity();closeDrawer()">📝 Motivation</button>
+  <button class="nav-btn" data-screen="objectives"     onclick="goObjectives();closeDrawer()">🎯 Objectives</button>
+  <button class="nav-btn" data-screen="unscramble"     onclick="goUnscramble();closeDrawer()">🔤 Unscramble</button>
+  <button class="nav-btn" data-screen="journey"        onclick="goJourney();closeDrawer()">🚀 3D Journey</button>
+  <button class="nav-btn" data-screen="generalization" onclick="goGeneralization();closeDrawer()">💡 Generalization</button>
+  <button class="nav-btn" data-screen="labelme" onclick="goLabelMe();closeDrawer()">🏷️ Label Me</button>
+</div>
+
+<button class="back-fab" id="back-fab" onclick="goHome()">←</button>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <canvas id="home-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+  <div class="home-nebula" style="width:500px;height:400px;top:5%;left:-5%;background:radial-gradient(ellipse,#1a0050,transparent);animation-duration:10s;"></div>
+  <div class="home-nebula" style="width:400px;height:350px;top:40%;right:0%;background:radial-gradient(ellipse,#002540,transparent);animation-duration:14s;animation-delay:3s;"></div>
+  <div class="home-nebula" style="width:350px;height:300px;bottom:0%;left:35%;background:radial-gradient(ellipse,#200030,transparent);animation-duration:18s;animation-delay:6s;"></div>
+
+  <div class="home-content" style="padding-top:56px;">
+    <h1 class="home-title" style="font-size:clamp(4rem,13vw,11rem);margin-bottom:0;line-height:1.05;">Layers of the<br>Atmosphere</h1>
+  </div>
+  <div style="display:none"><div class="card-grid">
+      <!-- ORDER: Motivation, Objectives, Unscramble, 3D Journey, Generalization -->
+      <div class="activity-card card-1" onclick="goActivity()">
+        <div class="card-glow"></div>
+        <span class="card-icon">📝</span>
+        <div class="card-tag">Motivation Activity</div>
+        <div class="card-title">What Am I? Riddles</div>
+        <div class="card-desc">Decode secret atmosphere words using cipher clues! Solve 3 riddles layer by layer — ATMOSPHERE, TEMPERATURE, ALTITUDE.</div>
+        <div class="card-cta"><span>Play Now</span><span class="cta-arrow">→</span></div>
+      </div>
+      <div class="activity-card card-2" onclick="goObjectives()">
+        <div class="card-glow"></div>
+        <span class="card-icon">🎯</span>
+        <div class="card-tag">Learning Goals</div>
+        <div class="card-title">Lesson Objectives</div>
+        <div class="card-desc">Know what you'll learn! Define the atmosphere, describe its layers, and appreciate how it acts as Earth's protective blanket.</div>
+        <div class="card-cta"><span>View Goals</span><span class="cta-arrow">→</span></div>
+      </div>
+      <div class="activity-card card-3" onclick="goUnscramble()">
+        <div class="card-glow"></div>
+        <span class="card-icon">🔤</span>
+        <div class="card-tag">Interactive Activity</div>
+        <div class="card-title">Unscramble the Layers!</div>
+        <div class="card-desc">Read the clues and unscramble the letters to identify each atmospheric layer — from Troposphere to Exosphere!</div>
+        <div class="card-cta"><span>Start Activity</span><span class="cta-arrow">→</span></div>
+      </div>
+      <div class="activity-card card-4" onclick="goJourney()">
+        <div class="card-glow"></div>
+        <span class="card-icon">🚀</span>
+        <div class="card-tag">Interactive Simulation</div>
+        <div class="card-title">3D Atmosphere Journey</div>
+        <div class="card-desc">Fly through all layers of Earth's atmosphere — from the lush surface to the edge of space. Watch aurora, meteors, clouds & more.</div>
+        <div class="card-cta"><span>Explore Now</span><span class="cta-arrow">→</span></div>
+      </div>
+      <div class="activity-card card-5" onclick="goGeneralization()">
+        <div class="card-glow"></div>
+        <span class="card-icon">💡</span>
+        <div class="card-tag">Wrap-Up Activity</div>
+        <div class="card-title">Generalization</div>
+        <div class="card-desc">Review what you've learned! Answer key questions about the 5 layers and why our atmosphere matters so much for life on Earth.</div>
+        <div class="card-cta"><span>Review Now</span><span class="cta-arrow">→</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ JOURNEY ══ -->
+<div class="screen hidden-left" id="screen-journey">
+  <div id="viewport">
+    <div class="arrow-hint">Use Arrow Keys to navigate</div>
+    <div id="rocket-companion" class="face-down">
+      <div class="exhaust"></div>
+      <div class="rocket-emoji">🚀</div>
+    </div>
+    <div id="altitude-gauge">
+      <div class="gauge-wrap">
+        <div id="gauge-ticks"></div>
+        <div id="gauge-bar-track"><div id="gauge-bar-fill"></div></div>
+      </div>
+    </div>
+    <div id="gauge-readout">
+      <div id="readout-layer">Space</div>
+      <div id="readout-alt">600+<span>mi</span></div>
+    </div>
+    <div id="presentation">
+      <div class="slide" id="space-top">
+        <canvas class="layer-canvas" id="canvas-space-top"></canvas>
+        <div style="position:absolute;inset:0;z-index:1;pointer-events:none">
+          <div class="nebula" style="width:400px;height:300px;top:10%;left:5%;background:radial-gradient(ellipse,#1a0050,transparent);animation-duration:8s;"></div>
+          <div class="nebula" style="width:350px;height:250px;top:40%;right:10%;background:radial-gradient(ellipse,#003050,transparent);animation-duration:11s;animation-delay:2s;"></div>
+          <div class="nebula" style="width:280px;height:280px;bottom:5%;left:30%;background:radial-gradient(ellipse,#300020,transparent);animation-duration:13s;animation-delay:4s;"></div>
+        </div>
+        <div class="content-wrapper">
+          <div class="definition-text-moved">
+            <h1>The Earth's Atmosphere</h1>
+            <div class="info-card"><p>A dynamic envelope of gases protecting our planet. Click <strong>Dive to Surface</strong> to plunge straight down.</p></div>
+          </div>
+          <div class="earth-model-container"><canvas id="earth-canvas-3d"></canvas></div>
+        </div>
+      </div>
+      <div class="slide" id="thermosphere">
+        <div style="position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none">
+          <div class="aurora-band"></div><div class="aurora-band"></div><div class="aurora-band"></div><div class="aurora-band"></div>
+        </div>
+        <div class="satellite" style="z-index:5;">🛸</div>
+        <canvas class="layer-canvas" id="canvas-thermo" style="z-index:2;"></canvas>
+        <div class="content-wrapper">
+          <div class="icon" id="icon-thermosphere">🌌</div>
+          <h1>Thermosphere</h1>
+          <div class="info-card"><div class="altitude-badge">Altitude: 86 to 372 miles</div><p>The edge of space. Exposed to intense solar radiation, temperatures here can soar from 930°F to 3600°F. The ISS orbits in this layer.</p></div>
+        </div>
+      </div>
+      <div class="slide" id="mesosphere">
+        <canvas class="layer-canvas" id="canvas-meso" style="z-index:1;"></canvas>
+        <div style="position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none" id="meteor-container"></div>
+        <div class="content-wrapper">
+          <div class="icon" id="icon-mesosphere">☄️</div>
+          <h1>Mesosphere</h1>
+          <div class="info-card"><div class="altitude-badge">Altitude: 32 to 85 miles</div><p>The deep freeze. This is the coldest atmospheric layer, burning up millions of meteors every day before they reach the surface.</p></div>
+        </div>
+      </div>
+      <div class="slide" id="stratosphere">
+        <div style="position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none" id="uv-container">
+          <div class="ozone-layer" style="top:35%;"></div>
+          <div class="ozone-layer" style="top:45%;opacity:0.1;"></div>
+        </div>
+        <canvas class="layer-canvas" id="canvas-strat" style="z-index:2;"></canvas>
+        <div class="content-wrapper">
+          <div class="icon" id="icon-stratosphere">✈️</div>
+          <h1>Stratosphere</h1>
+          <div class="info-card"><div class="altitude-badge">Altitude: 11 to 31 miles</div><p>The protective shield. Houses the vital Ozone Layer which absorbs harmful UV radiation, blocking up to 99% before it reaches Earth.</p></div>
+        </div>
+      </div>
+      <div class="slide" id="troposphere">
+        <div style="position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none" id="cloud-container"></div>
+        <div style="position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none" id="rain-container"></div>
+        <canvas class="layer-canvas" id="canvas-tropo" style="z-index:3;"></canvas>
+        <div class="content-wrapper">
+          <div class="icon" id="icon-troposphere">☁️</div>
+          <h1>Troposphere</h1>
+          <div class="info-card"><div class="altitude-badge">Altitude: 0 to 10 miles</div><p>The surface layer. Holds 75% of the atmosphere's mass and is home to all weather — storms, clouds, and the air we breathe every day.</p></div>
+        </div>
+      </div>
+      <div class="slide" id="space-bottom">
+        <canvas class="layer-canvas" id="canvas-ground" style="z-index:1;"></canvas>
+        <div class="ground-surface" id="ground-surface"><div class="sun-glow"></div></div>
+        <div style="position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none" id="bird-container"></div>
+        <div class="content-wrapper" style="z-index:10;">
+          <div class="definition-text-moved">
+            <h1 style="color:#1a3a1f;text-shadow:0 2px 10px rgba(255,255,255,0.3);">Earth's Surface</h1>
+            <div class="info-card" style="background:rgba(0,80,20,0.3);border-color:rgba(100,200,80,0.3);"><p>You've reached the ground. Lush forests, flowing rivers, and teeming life. Launch upward to begin your ascent.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="journey-controls">
+      <button id="btnUp" onclick="goUp()">▲ Launch Upward</button>
+      <button id="btnDown" onclick="goDown()">▼ Dive Down</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ACTIVITY ══ -->
+<div class="screen hidden-right" id="screen-activity">
+  <div id="act-stage">
+    <div id="act-progress-strip"><div id="act-progress-fill"></div></div>
+    <div id="act-step-dots"></div>
+    <div id="act-score-badge">⭐ <span id="act-score-val">0</span> / 3</div>
+    <div class="layer-slide active" id="slide-intro">
+      <canvas class="slide-canvas-act" id="acanvas-intro"></canvas>
+      <div class="star-ring" style="width:280px;height:280px;top:50%;left:50%;margin:-140px 0 0 -140px;animation-duration:18s;"></div>
+      <div class="star-ring" style="width:480px;height:480px;top:50%;left:50%;margin:-240px 0 0 -240px;animation-duration:32s;animation-direction:reverse;"></div>
+      <div class="star-ring" style="width:680px;height:680px;top:50%;left:50%;margin:-340px 0 0 -340px;animation-duration:50s;"></div>
+      <div class="intro-content-act">
+        <span class="intro-emoji-act">🌍</span>
+        <h1 class="intro-title-act">WHAT AM I?</h1>
+        <p class="intro-sub-act">Decode the riddle — one layer at a time!</p>
+        <div class="key-box-act">
+          <div class="key-item-act"><span class="kl">A</span><span class="ks">=</span><span class="kn">1</span></div>
+          <div class="key-item-act"><span class="kl">E</span><span class="ks">=</span><span class="kn">2</span></div>
+          <div class="key-item-act"><span class="kl">I</span><span class="ks">=</span><span class="kn">3</span></div>
+          <div class="key-item-act"><span class="kl">O</span><span class="ks">=</span><span class="kn">4</span></div>
+          <div class="key-item-act"><span class="kl">U</span><span class="ks">=</span><span class="kn">5</span></div>
+        </div>
+        <button class="start-btn-act" onclick="actStart()">🚀 Start Activity</button>
+      </div>
+    </div>
+    <div class="layer-slide" id="slide-q1">
+      <canvas class="slide-canvas-act" id="acanvas-q1"></canvas>
+      <div class="act-deco atm-wave-act" style="width:180px;height:180px;top:50%;left:50%;margin:-90px 0 0 -90px;animation-duration:2.5s;"></div>
+      <div class="act-deco atm-wave-act" style="width:180px;height:180px;top:50%;left:50%;margin:-90px 0 0 -90px;animation-duration:2.5s;animation-delay:0.8s;"></div>
+      <div class="q-content-act" id="qc-1">
+        <div class="riddle-label-act">Riddle 1 of 3</div>
+        <div class="riddle-row-act">
+          <div class="q-char-act">🌍</div>
+          <div class="speech-wrap-act">
+            <div class="speech-bubble-act">
+              <div class="riddle-text-act">I surround the Earth, I'm always near,
+You can't see me, but I'm always here.<span class="what-am-i-text-act">What am I?</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="decode-card-act">
+          <div class="decode-label-act">🔑 Decode the word using the key</div>
+          <div class="cipher-row-act" id="cipher-1"></div>
+          <div class="word-reveal-act" id="reveal-1">ATMOSPHERE ✨</div>
+          <div class="feedback-act" id="fb-1"></div>
+          <div class="action-row-act">
+            <button class="abtn abtn-check" onclick="actCheck(1)">✅ Check</button>
+            <button class="abtn abtn-hint"  onclick="actHint(1)">💡 Hint</button>
+            <button class="abtn abtn-next"  id="next-1" onclick="actNext(1)">Next Riddle ➜</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layer-slide" id="slide-q2">
+      <canvas class="slide-canvas-act" id="acanvas-q2"></canvas>
+      <div class="act-deco heat-rise" style="width:4px;height:80px;background:linear-gradient(to top,#ff6b6b,transparent);left:8%;top:58%;animation-duration:2s;"></div>
+      <div class="act-deco heat-rise" style="width:3px;height:60px;background:linear-gradient(to top,#ffd93d,transparent);left:22%;top:63%;animation-duration:2.5s;animation-delay:0.4s;"></div>
+      <div class="act-deco heat-rise" style="width:5px;height:100px;background:linear-gradient(to top,#ff6b6b,transparent);left:76%;top:55%;animation-duration:1.8s;animation-delay:0.8s;"></div>
+      <div class="act-deco heat-rise" style="width:3px;height:70px;background:linear-gradient(to top,#ffd93d,transparent);left:88%;top:60%;animation-duration:2.2s;animation-delay:0.3s;"></div>
+      <div class="act-deco" style="right:4%;bottom:8%;font-size:7rem;opacity:0.08;transform:rotate(15deg);">🌡️</div>
+      <div class="q-content-act" id="qc-2">
+        <div class="riddle-label-act">Riddle 2 of 3</div>
+        <div class="riddle-row-act">
+          <div class="q-char-act">🌡️</div>
+          <div class="speech-wrap-act">
+            <div class="speech-bubble-act">
+              <div class="riddle-text-act">I'm hot or cold, I can make you shiver,
+I change each day, I make you quiver.<span class="what-am-i-text-act">What am I?</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="decode-card-act">
+          <div class="decode-label-act">🔑 Decode the word using the key</div>
+          <div class="cipher-row-act" id="cipher-2"></div>
+          <div class="word-reveal-act" id="reveal-2">TEMPERATURE ✨</div>
+          <div class="feedback-act" id="fb-2"></div>
+          <div class="action-row-act">
+            <button class="abtn abtn-check" onclick="actCheck(2)">✅ Check</button>
+            <button class="abtn abtn-hint"  onclick="actHint(2)">💡 Hint</button>
+            <button class="abtn abtn-next"  id="next-2" onclick="actNext(2)">Final Riddle ➜</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layer-slide" id="slide-q3">
+      <canvas class="slide-canvas-act" id="acanvas-q3"></canvas>
+      <div class="act-deco mountain-sil" style="width:300px;height:200px;background:rgba(255,255,255,0.04);left:-20px;"></div>
+      <div class="act-deco mountain-sil" style="width:240px;height:155px;background:rgba(255,255,255,0.055);left:130px;"></div>
+      <div class="act-deco mountain-sil" style="width:340px;height:215px;background:rgba(255,255,255,0.04);right:-30px;"></div>
+      <div class="q-content-act" id="qc-3">
+        <div class="riddle-label-act">Riddle 3 of 3</div>
+        <div class="riddle-row-act">
+          <div class="q-char-act">🏔️</div>
+          <div class="speech-wrap-act">
+            <div class="speech-bubble-act">
+              <div class="riddle-text-act">I go up high, the air gets thin,
+The higher you climb, the more you spin.<span class="what-am-i-text-act">What am I?</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="decode-card-act">
+          <div class="decode-label-act">🔑 Decode the word using the key</div>
+          <div class="cipher-row-act" id="cipher-3"></div>
+          <div class="word-reveal-act" id="reveal-3">ALTITUDE ✨</div>
+          <div class="feedback-act" id="fb-3"></div>
+          <div class="action-row-act">
+            <button class="abtn abtn-check" onclick="actCheck(3)">✅ Check</button>
+            <button class="abtn abtn-hint"  onclick="actHint(3)">💡 Hint</button>
+            <button class="abtn abtn-next"  id="next-3" onclick="actNext(3)">See Results 🎉</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layer-slide" id="slide-end">
+      <canvas class="slide-canvas-act" id="acanvas-end"></canvas>
+      <div class="end-content-act" id="end-content">
+        <div class="end-emoji-act">🏆</div>
+        <div class="end-title-act">Brilliant!</div>
+        <div class="end-sub-act">You decoded all 3 atmosphere riddles!</div>
+        <div class="score-display-act">⭐ <span id="act-final-score">0</span> / 3</div>
+        <div class="answers-recap-act" id="answers-recap"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn-restart-act" onclick="actRestart()">🔄 Play Again</button>
+          <button class="btn-restart-act" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);" onclick="goJourney()">🚀 Explore 3D Journey</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OBJECTIVES ══ -->
+<div class="screen hidden-right" id="screen-objectives">
+  <canvas id="obj-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+  <div class="home-nebula" style="width:450px;height:380px;top:5%;right:-5%;background:radial-gradient(ellipse,#002540,transparent);animation-duration:12s;"></div>
+  <div class="home-nebula" style="width:350px;height:300px;bottom:5%;left:0%;background:radial-gradient(ellipse,#1a0050,transparent);animation-duration:16s;animation-delay:4s;"></div>
+  <div class="obj-wrap">
+    <div class="obj-badge">📚 Science — Earth's Atmosphere</div>
+    <h2 class="obj-title">🎯 Lesson Objectives</h2>
+    <p class="obj-sub">At the end of the lesson, the learners should be able to:</p>
+    <div class="obj-cards" id="obj-cards">
+      <div class="obj-card" style="transition-delay:0.1s;">
+        <div class="obj-letter la">A</div>
+        <div class="obj-text"><em>Define</em> atmosphere and understand its role as the gaseous envelope surrounding Earth.</div>
+        <div class="obj-icon">🌍</div>
+      </div>
+      <div class="obj-card" style="transition-delay:0.25s;">
+        <div class="obj-letter lb">B</div>
+        <div class="obj-text"><em>Describe</em> the layers of the atmosphere — Troposphere, Stratosphere, Mesosphere, Thermosphere, and Exosphere — and their key characteristics.</div>
+        <div class="obj-icon">🔭</div>
+      </div>
+      <div class="obj-card" style="transition-delay:0.4s;">
+        <div class="obj-letter lc">C</div>
+        <div class="obj-text"><em>Appreciate</em> how the atmosphere acts as a <em>protective blanket</em>, shielding life on Earth from harmful radiation, extreme temperatures, and cosmic debris.</div>
+        <div class="obj-icon">🛡️</div>
+      </div>
+    </div>
+    <p class="obj-footer">✨ Keep these goals in mind as you explore! ✨</p>
+  </div>
+</div>
+
+<!-- ══ UNSCRAMBLE — ONE PER SLIDE ══ -->
+<div class="screen hidden-right" id="screen-unscramble">
+  <canvas class="unscr-canvas" id="unscr-canvas"></canvas>
+
+  <!-- Intro Slide -->
+  <div class="us-slide us-slide-active" id="us-slide-intro">
+    <div class="us-intro-content">
+      <div class="us-intro-badge">🔤 Interactive Activity</div>
+      <h2 class="us-intro-title">Unscramble the Layers!</h2>
+      <p class="us-intro-sub">Read each definition and unscramble the letters to identify the atmospheric layer. One layer at a time!</p>
+      <button class="us-start-btn" onclick="usGoToSlide(1)">🚀 Start Activity</button>
+    </div>
+  </div>
+
+  <!-- Question Slides (1–5) -->
+  <div class="us-slide" id="us-slide-1">
+    <div class="us-q-wrap">
+      <div class="us-top-bar">
+        <div class="us-progress-track"><div class="us-progress-fill" id="us-pfill-1" style="width:20%"></div></div>
+        <div class="us-step-pill">Layer 1 of 5</div>
+        <div class="us-score-pill" id="us-sc-1">0 / 5</div>
+      </div>
+      <div class="us-card">
+        <div class="us-num-row">
+          <div class="us-num">1</div>
+          <div class="us-scrambled">P &nbsp;O &nbsp;R &nbsp;T &nbsp;O &nbsp;S &nbsp;P &nbsp;H &nbsp;E &nbsp;R &nbsp;E</div>
+        </div>
+        <p class="us-def">The first layer nearest the Earth's surface where all weather conditions occur and where we can breathe freely.</p>
+        <div class="us-answer-row">
+          <span class="us-label">Answer:</span>
+          <input class="us-input" id="usi-1" maxlength="15" placeholder="Type here…" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')usCheck(1)">
+          <button class="us-check-btn" id="usbtn-1" onclick="usCheck(1)">✅ Check</button>
+          <button class="us-next-btn" id="usnext-1" onclick="usGoToSlide(2)">Next ➜</button>
+        </div>
+        <div class="us-feedback" id="usfb-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="us-slide" id="us-slide-2">
+    <div class="us-q-wrap">
+      <div class="us-top-bar">
+        <div class="us-progress-track"><div class="us-progress-fill" id="us-pfill-2" style="width:40%"></div></div>
+        <div class="us-step-pill">Layer 2 of 5</div>
+        <div class="us-score-pill" id="us-sc-2">0 / 5</div>
+      </div>
+      <div class="us-card">
+        <div class="us-num-row">
+          <div class="us-num">2</div>
+          <div class="us-scrambled">S &nbsp;T &nbsp;A &nbsp;R &nbsp;T &nbsp;O &nbsp;S &nbsp;P &nbsp;H &nbsp;E &nbsp;R &nbsp;E</div>
+        </div>
+        <p class="us-def">The second layer that contains the important ozone layer, which protects us from the sun's harmful ultraviolet (UV) radiation.</p>
+        <div class="us-answer-row">
+          <span class="us-label">Answer:</span>
+          <input class="us-input" id="usi-2" maxlength="15" placeholder="Type here…" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')usCheck(2)">
+          <button class="us-check-btn" id="usbtn-2" onclick="usCheck(2)">✅ Check</button>
+          <button class="us-next-btn" id="usnext-2" onclick="usGoToSlide(3)">Next ➜</button>
+        </div>
+        <div class="us-feedback" id="usfb-2"></div>
+      </div>
+      <button class="us-back-link" onclick="usGoToSlide(1)" style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,0.3);font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;">← Back</button>
+    </div>
+  </div>
+
+  <div class="us-slide" id="us-slide-3">
+    <div class="us-q-wrap">
+      <div class="us-top-bar">
+        <div class="us-progress-track"><div class="us-progress-fill" id="us-pfill-3" style="width:60%"></div></div>
+        <div class="us-step-pill">Layer 3 of 5</div>
+        <div class="us-score-pill" id="us-sc-3">0 / 5</div>
+      </div>
+      <div class="us-card">
+        <div class="us-num-row">
+          <div class="us-num">3</div>
+          <div class="us-scrambled">S &nbsp;O &nbsp;M &nbsp;E &nbsp;S &nbsp;P &nbsp;H &nbsp;E &nbsp;R &nbsp;E</div>
+        </div>
+        <p class="us-def">The third layer where most meteors burn up due to its thin air and the friction it generates.</p>
+        <div class="us-answer-row">
+          <span class="us-label">Answer:</span>
+          <input class="us-input" id="usi-3" maxlength="15" placeholder="Type here…" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')usCheck(3)">
+          <button class="us-check-btn" id="usbtn-3" onclick="usCheck(3)">✅ Check</button>
+          <button class="us-next-btn" id="usnext-3" onclick="usGoToSlide(4)">Next ➜</button>
+        </div>
+        <div class="us-feedback" id="usfb-3"></div>
+      </div>
+      <button class="us-back-link" onclick="usGoToSlide(2)" style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,0.3);font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;">← Back</button>
+    </div>
+  </div>
+
+  <div class="us-slide" id="us-slide-4">
+    <div class="us-q-wrap">
+      <div class="us-top-bar">
+        <div class="us-progress-track"><div class="us-progress-fill" id="us-pfill-4" style="width:80%"></div></div>
+        <div class="us-step-pill">Layer 4 of 5</div>
+        <div class="us-score-pill" id="us-sc-4">0 / 5</div>
+      </div>
+      <div class="us-card">
+        <div class="us-num-row">
+          <div class="us-num">4</div>
+          <div class="us-scrambled">R &nbsp;E &nbsp;T &nbsp;H &nbsp;M &nbsp;O &nbsp;E &nbsp;P &nbsp;E &nbsp;R &nbsp;S &nbsp;H</div>
+        </div>
+        <p class="us-def">The fourth and hottest layer that contains the ionosphere, making radio wave communication possible and serving as home to the aurora borealis.</p>
+        <div class="us-answer-row">
+          <span class="us-label">Answer:</span>
+          <input class="us-input" id="usi-4" maxlength="15" placeholder="Type here…" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')usCheck(4)">
+          <button class="us-check-btn" id="usbtn-4" onclick="usCheck(4)">✅ Check</button>
+          <button class="us-next-btn" id="usnext-4" onclick="usGoToSlide(5)">Next ➜</button>
+        </div>
+        <div class="us-feedback" id="usfb-4"></div>
+      </div>
+      <button class="us-back-link" onclick="usGoToSlide(3)" style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,0.3);font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;">← Back</button>
+    </div>
+  </div>
+
+  <div class="us-slide" id="us-slide-5">
+    <div class="us-q-wrap">
+      <div class="us-top-bar">
+        <div class="us-progress-track"><div class="us-progress-fill" id="us-pfill-5" style="width:100%"></div></div>
+        <div class="us-step-pill">Layer 5 of 5</div>
+        <div class="us-score-pill" id="us-sc-5">0 / 5</div>
+      </div>
+      <div class="us-card">
+        <div class="us-num-row">
+          <div class="us-num">5</div>
+          <div class="us-scrambled">O &nbsp;X &nbsp;E &nbsp;S &nbsp;P &nbsp;H &nbsp;E &nbsp;R &nbsp;E</div>
+        </div>
+        <p class="us-def">The fifth and outermost layer, acting as the final frontier of Earth's gaseous envelope where satellites can be found.</p>
+        <div class="us-answer-row">
+          <span class="us-label">Answer:</span>
+          <input class="us-input" id="usi-5" maxlength="15" placeholder="Type here…" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')usCheck(5)">
+          <button class="us-check-btn" id="usbtn-5" onclick="usCheck(5)">✅ Check</button>
+          <button class="us-next-btn" id="usnext-5" onclick="usGoToSlide('end')">🎉 Finish!</button>
+        </div>
+        <div class="us-feedback" id="usfb-5"></div>
+      </div>
+      <button class="us-back-link" onclick="usGoToSlide(4)" style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,0.3);font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;">← Back</button>
+    </div>
+  </div>
+
+  <!-- End Slide -->
+  <div class="us-slide" id="us-slide-end">
+    <div class="us-end-content" id="us-end-content">
+      <div class="us-end-emoji">🎉</div>
+      <div class="us-end-title">All Layers Unlocked!</div>
+      <div class="us-end-sub">You've identified all 5 layers of Earth's atmosphere!</div>
+      <div class="us-score-big">⭐ <span id="us-final-score">0</span> / 5</div>
+      <div class="us-recap-row" id="us-recap-row"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+        <button class="us-replay-btn" onclick="usReset()">🔄 Play Again</button>
+        <button class="us-replay-btn" style="background:linear-gradient(135deg,#FFD93D,#f59e0b);color:#1a1a2e;" onclick="toggleUsKey()">🔑 Answer Key</button>
+      </div>
+      <div class="us-key-panel" id="us-key-panel">
+        <div class="key-title">📋 Answer Key</div>
+        <div class="key-row"><span class="key-n">1.</span><span class="key-word">TROPOSPHERE</span><span class="key-scrambled">(P O R T O S P H E R E)</span></div>
+        <div class="key-row"><span class="key-n">2.</span><span class="key-word">STRATOSPHERE</span><span class="key-scrambled">(S T A R T O S P H E R E)</span></div>
+        <div class="key-row"><span class="key-n">3.</span><span class="key-word">MESOSPHERE</span><span class="key-scrambled">(S O M E S P H E R E)</span></div>
+        <div class="key-row"><span class="key-n">4.</span><span class="key-word">THERMOSPHERE</span><span class="key-scrambled">(R E T H M O E P E R S H)</span></div>
+        <div class="key-row"><span class="key-n">5.</span><span class="key-word">EXOSPHERE</span><span class="key-scrambled">(O X E S P H E R E)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GENERALIZATION ══ -->
+<div class="screen hidden-right" id="screen-labelme">
+  <canvas id="labelme-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+  <div class="home-nebula" style="width:500px;height:400px;top:0%;left:-5%;background:radial-gradient(ellipse,#001a3d,transparent);animation-duration:12s;"></div>
+  <div class="home-nebula" style="width:400px;height:350px;bottom:0%;right:-5%;background:radial-gradient(ellipse,#1a0030,transparent);animation-duration:16s;animation-delay:3s;"></div>
+
+  <!-- Slide wrapper -->
+  <div style="position:relative;z-index:10;width:100%;height:100%;overflow:hidden;">
+
+    <!-- ── NAV DOTS ── -->
+    <div id="lm-dots" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:50;">
+      <div class="lm-dot lm-dot-active" onclick="lmGoSlide(0)"></div>
+      <div class="lm-dot" onclick="lmGoSlide(1)"></div>
+      <div class="lm-dot" onclick="lmGoSlide(2)"></div>
+      <div class="lm-dot" onclick="lmGoSlide(3)"></div>
+    </div>
+
+    <!-- ── PREV / NEXT ARROWS ── -->
+    <button onclick="lmPrev()" id="lm-prev-btn" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);z-index:50;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.8rem;width:52px;height:52px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">‹</button>
+    <button onclick="lmNext()" id="lm-next-btn" style="position:absolute;right:20px;top:50%;transform:translateY(-50%);z-index:50;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.8rem;width:52px;height:52px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">›</button>
+
+    <!-- ══════════════════════════════════════
+         SLIDE 0 — INSTRUCTIONS
+    ══════════════════════════════════════ -->
+    <div class="lm-slide" id="lm-slide-0" style="opacity:1;transform:translateX(0%);">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:70px 80px 80px;text-align:center;gap:36px;">
+        <div>
+          <div style="display:inline-block;background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.4);color:#63b3ed;font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 24px;border-radius:50px;margin-bottom:18px;">🏷️ Activity</div>
+          <h1 style="font-family:'Fredoka One',cursive;font-size:clamp(3rem,8vw,5rem);background:linear-gradient(135deg,#63b3ed,#b794f4,#68d391);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0;line-height:1.1;">Label Me!</h1>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.15);border-radius:24px;padding:36px 48px;max-width:860px;width:100%;">
+          <div style="font-weight:800;font-size:2rem;color:#FFD93D;margin-bottom:24px;letter-spacing:0.5px;">📋 Instructions</div>
+          <div style="display:flex;flex-direction:column;gap:22px;text-align:left;">
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <span style="background:#63b3ed;color:#000;font-weight:900;font-size:1.5rem;min-width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+              <span style="color:rgba(255,255,255,0.9);font-size:clamp(1.2rem,3vw,1.875rem);line-height:1.5;">Label the layers of the atmosphere with their corresponding events and features using the diagram.</span>
+            </div>
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <span style="background:#b794f4;color:#000;font-weight:900;font-size:1.5rem;min-width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
+              <span style="color:rgba(255,255,255,0.9);font-size:clamp(1.2rem,3vw,1.875rem);line-height:1.5;">You will only be given <strong style="color:#FFD93D;">3 minutes</strong> to finish the activity.</span>
+            </div>
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <span style="background:#68d391;color:#000;font-weight:900;font-size:1.5rem;min-width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>
+              <span style="color:rgba(255,255,255,0.9);font-size:clamp(1.2rem,3vw,1.875rem);line-height:1.5;">After the given time, <strong style="color:#FFD93D;">two (2) representatives</strong> of each group will present their output in front within <strong style="color:#FFD93D;">2 minutes</strong>.</span>
+            </div>
+          </div>
+        </div>
+        <div style="color:rgba(255,255,255,0.35);font-size:1rem;">Swipe or use arrows to navigate →</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SLIDE 1 — ACTIVITY TIMER (3 min)
+    ══════════════════════════════════════ -->
+    <div class="lm-slide" id="lm-slide-1" style="opacity:0;transform:translateX(100%);">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:70px 40px 80px;text-align:center;gap:28px;">
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:#63b3ed;margin-bottom:12px;">⏱ Activity Timer</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:clamp(2rem,6vw,3.75rem);color:rgba(255,255,255,0.6);margin-bottom:4px;">Time to complete the activity</div>
+        </div>
+
+        <!-- Big timer display -->
+        <div style="background:rgba(0,0,0,0.55);border:3px solid rgba(99,179,237,0.6);border-radius:32px;padding:48px 80px;min-width:400px;">
+          <div id="lm-timer-display" style="font-family:'Fredoka One',cursive;font-size:clamp(5rem,18vw,9rem);color:#fff;line-height:1;letter-spacing:4px;">03:00</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:1.2rem;margin-top:8px;">3 minutes per group</div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
+          <button onclick="lmTimerStart()" style="background:linear-gradient(135deg,#48bb78,#38a169);border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(1.2rem,3vw,1.875rem);padding:18px 44px;border-radius:60px;cursor:pointer;box-shadow:0 8px 30px rgba(72,187,120,0.4);">▶ Start</button>
+          <button onclick="lmTimerReset()" style="background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(1.2rem,3vw,1.875rem);padding:18px 44px;border-radius:60px;cursor:pointer;">↺ Reset</button>
+        </div>
+        <div style="color:rgba(255,255,255,0.35);font-size:1rem;">Timer turns red when 30 seconds remain</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SLIDE 2 — CLASS TIMER (10 min)
+    ══════════════════════════════════════ -->
+    <div class="lm-slide" id="lm-slide-2" style="opacity:0;transform:translateX(100%);">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:70px 40px 80px;text-align:center;gap:28px;">
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:#b794f4;margin-bottom:12px;">⏰ Class Timer</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:clamp(2rem,6vw,3.75rem);color:rgba(255,255,255,0.6);margin-bottom:4px;">Total time for the activity</div>
+        </div>
+
+        <!-- Big class timer display -->
+        <div style="background:rgba(0,0,0,0.55);border:3px solid rgba(183,148,244,0.6);border-radius:32px;padding:48px 80px;min-width:400px;">
+          <div id="lm-class-display" style="font-family:'Fredoka One',cursive;font-size:clamp(5rem,18vw,9rem);color:#fff;line-height:1;letter-spacing:4px;">10:00</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:1.2rem;margin-top:8px;">10 minutes total class time</div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
+          <button onclick="lmClassStart()" style="background:linear-gradient(135deg,#9f7aea,#805ad5);border:none;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(1.2rem,3vw,1.875rem);padding:18px 44px;border-radius:60px;cursor:pointer;box-shadow:0 8px 30px rgba(159,122,234,0.4);">▶ Start</button>
+          <button onclick="lmClassReset()" style="background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(1.2rem,3vw,1.875rem);padding:18px 44px;border-radius:60px;cursor:pointer;">↺ Reset</button>
+        </div>
+        <div style="color:rgba(255,255,255,0.35);font-size:1rem;">Timer turns red when 1 minute remains</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SLIDE 3 — ATMOSPHERE DIAGRAM
+    ══════════════════════════════════════ -->
+    <div class="lm-slide" id="lm-slide-3" style="opacity:0;transform:translateX(100%);">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;padding:70px 20px 80px;overflow-y:auto;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:#68d391;margin-bottom:8px;">📊 Atmosphere Diagram</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:clamp(2rem,5vw,3rem);color:rgba(255,255,255,0.7);">Label the Layers!</div>
+        </div>
+
+        <div style="max-width:820px;width:100%;background:rgba(0,0,8,0.65);border:1.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:20px 16px;">
+          <svg viewBox="0 0 700 560" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;font-family:Nunito,sans-serif;">
+
+            <!-- Layer bands (bottom = Troposphere, top = Exosphere) -->
+            <rect x="0" y="440" width="700" height="80"  fill="rgba(100,200,255,0.18)"/>
+            <rect x="0" y="330" width="700" height="110" fill="rgba(74,138,230,0.18)"/>
+            <rect x="0" y="225" width="700" height="105" fill="rgba(139,92,246,0.18)"/>
+            <rect x="0" y="115" width="700" height="110" fill="rgba(244,63,94,0.18)"/>
+            <rect x="0" y="20"  width="700" height="95"  fill="rgba(200,200,220,0.10)"/>
+
+            <!-- Dashed dividers -->
+            <line x1="0" y1="440" x2="700" y2="440" stroke="rgba(100,200,255,0.6)" stroke-width="1.5" stroke-dasharray="9,5"/>
+            <line x1="0" y1="330" x2="700" y2="330" stroke="rgba(74,138,230,0.6)"  stroke-width="1.5" stroke-dasharray="9,5"/>
+            <line x1="0" y1="225" x2="700" y2="225" stroke="rgba(139,92,246,0.6)"  stroke-width="1.5" stroke-dasharray="9,5"/>
+            <line x1="0" y1="115" x2="700" y2="115" stroke="rgba(244,63,94,0.6)"   stroke-width="1.5" stroke-dasharray="9,5"/>
+            <line x1="0" y1="20"  x2="700" y2="20"  stroke="rgba(200,200,220,0.35)" stroke-width="1.5" stroke-dasharray="9,5"/>
+
+            <!-- Earth ground -->
+            <rect x="0" y="520" width="700" height="40" fill="rgba(80,160,80,0.45)"/>
+            <text x="350" y="546" fill="rgba(255,255,255,0.75)" font-size="15" text-anchor="middle" font-weight="700">🌍 Earth's Surface</text>
+
+            <!-- LEFT: Layer names + altitude + temp -->
+            <text x="10" y="488" fill="#90d5ff" font-size="17" font-weight="800">TROPOSPHERE</text>
+            <text x="10" y="507" fill="rgba(144,213,255,0.65)" font-size="12">0–10 mi  |  🌡️ 62°F → -60°F</text>
+
+            <text x="10" y="374" fill="#4a8ae6" font-size="17" font-weight="800">STRATOSPHERE</text>
+            <text x="10" y="393" fill="rgba(74,138,230,0.65)" font-size="12">11–31 mi  |  🌡️ -60°F → 5°F</text>
+
+            <text x="10" y="270" fill="#8b5cf6" font-size="17" font-weight="800">MESOSPHERE</text>
+            <text x="10" y="289" fill="rgba(139,92,246,0.65)" font-size="12">32–85 mi  |  🌡️ 5°F → -148°F</text>
+
+            <text x="10" y="160" fill="#f43f5e" font-size="17" font-weight="800">THERMOSPHERE</text>
+            <text x="10" y="179" fill="rgba(244,63,94,0.65)" font-size="12">86–372 mi  |  🌡️ 930°F → 3600°F</text>
+
+            <text x="10" y="60" fill="#c8c8dc" font-size="17" font-weight="800">EXOSPHERE</text>
+            <text x="10" y="79" fill="rgba(200,200,220,0.65)" font-size="12">310–620 mi  |  🌡️ ≈ Absolute Zero</text>
+
+            <!-- RIGHT: Feature callouts -->
+            <!-- Troposphere -->
+            <text x="430" y="468" fill="rgba(255,255,255,0.88)" font-size="13">☁️ Clouds &amp; Weather</text>
+            <text x="430" y="486" fill="rgba(255,255,255,0.88)" font-size="13">🌧️ Rain, Snow, Wind</text>
+            <text x="430" y="504" fill="rgba(255,255,255,0.88)" font-size="13">✈️ Commercial Flights</text>
+            <!-- Stratosphere -->
+            <text x="430" y="356" fill="rgba(255,255,255,0.88)" font-size="13">🛡️ Ozone Layer (UV shield)</text>
+            <text x="430" y="374" fill="rgba(255,255,255,0.88)" font-size="13">🎈 Weather Balloons</text>
+            <text x="430" y="392" fill="rgba(255,255,255,0.88)" font-size="13">🚀 High-Altitude Jets</text>
+            <!-- Mesosphere -->
+            <text x="430" y="252" fill="rgba(255,255,255,0.88)" font-size="13">☄️ Meteors Burn Up</text>
+            <text x="430" y="270" fill="rgba(255,255,255,0.88)" font-size="13">❄️ Coldest Layer</text>
+            <text x="430" y="288" fill="rgba(255,255,255,0.88)" font-size="13">🌌 Noctilucent Clouds</text>
+            <!-- Thermosphere -->
+            <text x="430" y="148" fill="rgba(255,255,255,0.88)" font-size="13">🌈 Aurora Borealis</text>
+            <text x="430" y="166" fill="rgba(255,255,255,0.88)" font-size="13">🛸 ISS Orbit (~250 mi)</text>
+            <text x="430" y="184" fill="rgba(255,255,255,0.88)" font-size="13">📡 Radio Wave Reflection</text>
+            <!-- Exosphere -->
+            <text x="430" y="48" fill="rgba(255,255,255,0.88)" font-size="13">🛰️ Satellites Orbit Here</text>
+            <text x="430" y="66" fill="rgba(255,255,255,0.88)" font-size="13">🌌 Fades into Space</text>
+            <text x="430" y="84" fill="rgba(255,255,255,0.88)" font-size="13">🪐 Very Thin Air</text>
+
+            <!-- Connector ticks (right features → divider) -->
+            <line x1="425" y1="484" x2="400" y2="484" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="425" y1="373" x2="400" y2="373" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="425" y1="269" x2="400" y2="269" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="425" y1="165" x2="400" y2="165" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="425" y1="65"  x2="400" y2="65"  stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="3,3"/>
+
+            <!-- Space label -->
+            <text x="350" y="13" fill="rgba(255,255,255,0.30)" font-size="11" text-anchor="middle" letter-spacing="3">· · · OUTER SPACE · · ·</text>
+          </svg>
+        </div>
+        <div style="margin-top:10px;color:rgba(255,255,255,0.3);font-size:0.9rem;text-align:center;">Use this diagram to label and discuss each layer with your group.</div>
+      </div>
+    </div>
+
+  </div><!-- end slide wrapper -->
+</div>
+
+<div class="screen hidden-right" id="screen-generalization">
+  <canvas id="gen-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+  <div class="home-nebula" style="width:500px;height:400px;top:0%;right:-10%;background:radial-gradient(ellipse,#3d1a00,transparent);animation-duration:11s;"></div>
+  <div class="home-nebula" style="width:400px;height:350px;bottom:5%;left:-5%;background:radial-gradient(ellipse,#1a0800,transparent);animation-duration:15s;animation-delay:4s;"></div>
+  <div class="gen-inner" id="gen-inner">
+    <div class="gen-header">
+      <div class="gen-badge">💡 Lesson Wrap-Up</div>
+      <h2 class="gen-title">Generalization</h2>
+      <p class="gen-sub">Let's put it all together! Tap each question to reveal the answer.</p>
+    </div>
+    <div class="gen-progress-dots" id="gen-progress-dots">
+      <div class="gen-dot g-active" id="gdot-1"></div>
+      <div class="gen-dot" id="gdot-2"></div>
+      <div class="gen-dot" id="gdot-3"></div>
+    </div>
+    <div class="gen-questions" id="gen-questions">
+      <div class="gen-block" id="gen-block-1">
+        <div class="gen-q-header">
+          <div class="gen-q-num">1</div>
+          <div class="gen-q-text">What are the 5 layers of the atmosphere?</div>
+        </div>
+        <div class="gen-answer-panel" id="gen-panel-1">
+          <div class="gen-answer-inner">
+            <div class="gen-divider"></div>
+            <div class="gen-layer-chips">
+              <div class="gen-chip chip-tropo" style="animation-delay:0.05s;">☁️ 1. Troposphere</div>
+              <div class="gen-chip chip-strato" style="animation-delay:0.15s;">✈️ 2. Stratosphere</div>
+              <div class="gen-chip chip-meso" style="animation-delay:0.25s;">☄️ 3. Mesosphere</div>
+              <div class="gen-chip chip-thermo" style="animation-delay:0.35s;">🌌 4. Thermosphere</div>
+              <div class="gen-chip chip-exo" style="animation-delay:0.45s;">🛸 5. Exosphere</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 28px 22px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button class="gen-reveal-btn" id="gen-reveal-1" onclick="genReveal(1)">👁️ Reveal Answer</button>
+          <button class="gen-next-btn" id="gen-next-1" onclick="genUnlockNext(2)">Next Question ➜</button>
+        </div>
+      </div>
+      <div class="gen-block" id="gen-block-2">
+        <div class="gen-q-header">
+          <div class="gen-q-num">2</div>
+          <div class="gen-q-text">What is the importance of the atmosphere for us human beings?</div>
+        </div>
+        <div class="gen-answer-panel" id="gen-panel-2">
+          <div class="gen-answer-inner">
+            <div class="gen-divider"></div>
+            <div class="gen-possible-label">Possible Answer:</div>
+            <div class="gen-possible-card">
+              <p>The atmosphere is important for life here on Earth because it provides <em>carbon dioxide for plants</em> and <em>oxygen for animals and us, humans</em>.</p>
+              <p>It also shields us from harmful UV radiation, keeps our planet at a livable temperature, and protects us from space debris like meteors.</p>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 28px 22px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button class="gen-reveal-btn" id="gen-reveal-2" onclick="genReveal(2)">👁️ Reveal Answer</button>
+          <button class="gen-next-btn" id="gen-next-2" onclick="genUnlockNext(3)">Next Question ➜</button>
+        </div>
+      </div>
+      <div class="gen-block" id="gen-block-3">
+        <div class="gen-q-header">
+          <div class="gen-q-num">3</div>
+          <div class="gen-q-text">What happens if too much pollution builds up in the atmosphere?</div>
+        </div>
+        <div class="gen-answer-panel" id="gen-panel-3">
+          <div class="gen-answer-inner">
+            <div class="gen-divider"></div>
+            <div class="gen-possible-label">Possible Answer:</div>
+            <div class="gen-possible-card">
+              <p>It can cause <em>health problems</em>, like <em>asthma</em> and other respiratory illnesses for people who breathe the polluted air.</p>
+              <p>Too much pollution can also damage the <em>ozone layer</em>, allowing more harmful UV rays to reach Earth's surface, and contributes to <em>climate change</em>.</p>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 28px 22px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button class="gen-reveal-btn" id="gen-reveal-3" onclick="genReveal(3)">👁️ Reveal Answer</button>
+          <button class="gen-next-btn" id="gen-next-3" onclick="genShowComplete()">🎉 Finish!</button>
+        </div>
+      </div>
+    </div>
+    <div class="gen-tap-hint" id="gen-tap-hint">👆 Click "Reveal Answer" to see the answer, then move to the next question</div>
+    <div class="gen-wrapup" id="gen-wrapup">
+      <span class="gen-wrapup-emoji">🌍</span>
+      <div class="gen-wrapup-text">The atmosphere is our planet's invisible shield — layers of gas working together to make life possible. Protect it, appreciate it, understand it!</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+/* ══ NAVBAR AUTO-HIDE ══ */
+let navHideTimer=null,navIsHidden=false;
+const AUTO_HIDE_SCREENS=['unscramble','journey','activity','objectives','generalization'];
+function showNavbar(){
+  document.getElementById('navbar').classList.remove('nav-hidden');
+  document.getElementById('back-fab').style.top='68px';
+  navIsHidden=false;clearTimeout(navHideTimer);
+  if(AUTO_HIDE_SCREENS.includes(currentScreen))navHideTimer=setTimeout(hideNavbar,3000);
+}
+function hideNavbar(){
+  if(currentScreen==='home')return;
+  document.getElementById('navbar').classList.add('nav-hidden');
+  document.getElementById('back-fab').style.top='14px';
+  navIsHidden=true;
+}
+document.addEventListener('mousemove',showNavbar);
+document.addEventListener('touchstart',showNavbar);
+document.addEventListener('scroll',showNavbar,true);
+document.getElementById('nav-trigger').addEventListener('mouseenter',showNavbar);
+
+/* ══ SCREEN NAV ══ */
+let currentScreen='home',journeyInitialized=false,activityInitialized=false;
+function flash(cb){
+  const f=document.getElementById('flash-overlay');
+  f.style.opacity='0.4';setTimeout(()=>{f.style.opacity='0';if(cb)cb();},200);
+}
+function setScreen(name){
+  const screens=['home','journey','activity','objectives','unscramble','generalization','labelme'];
+  screens.forEach(s=>{
+    const el=document.getElementById('screen-'+s);
+    el.classList.remove('active','hidden-left','hidden-right');
+    if(s===name)el.classList.add('active');
+    else if(s==='journey')el.classList.add('hidden-left');
+    else el.classList.add('hidden-right');
+  });
+  document.querySelectorAll('.nav-btn[data-screen]').forEach(btn=>{
+    btn.classList.toggle('active-nav',btn.dataset.screen===name);
+  });
+  const fab=document.getElementById('back-fab');
+  fab.classList.toggle('show',name!=='home');
+  currentScreen=name;
+  if(name==='home'){showNavbar();clearTimeout(navHideTimer);}else{showNavbar();}
+}
+function goHome()          {flash(()=>setScreen('home'));}
+function goJourney()       {flash(()=>{setScreen('journey');if(!journeyInitialized){initJourney();journeyInitialized=true;}activeKeyTarget='journey';});}
+function goActivity()      {flash(()=>{setScreen('activity');if(!activityInitialized){initActivity();activityInitialized=true;}activeKeyTarget='activity';});}
+function goObjectives()    {
+  flash(()=>{
+    setScreen('objectives');activeKeyTarget='other';
+    setTimeout(()=>document.querySelectorAll('.obj-card').forEach(c=>c.classList.add('visible')),200);
+    if(!document.getElementById('obj-canvas')._init){document.getElementById('obj-canvas')._init=true;makeActStarCanvas('obj-canvas',150,true);}
+  });
+}
+function goUnscramble()    {
+  flash(()=>{
+    setScreen('unscramble');activeKeyTarget='other';
+    if(!document.getElementById('unscr-canvas')._init){document.getElementById('unscr-canvas')._init=true;makeActStarCanvas('unscr-canvas',180,true);}
+  });
+}
+function goGeneralization(){
+  flash(()=>{
+    setScreen('generalization');activeKeyTarget='other';
+    if(!document.getElementById('gen-canvas')._init){document.getElementById('gen-canvas')._init=true;makeActStarCanvas('gen-canvas',160,true);}
+    genReset();
+  });
+}
+function goLabelMe(){
+  flash(()=>{
+    setScreen('labelme');activeKeyTarget='other';
+    if(!document.getElementById('labelme-canvas')._init){document.getElementById('labelme-canvas')._init=true;makeActStarCanvas('labelme-canvas',160,true);}
+    lmGoSlide(0);
+  });
+}
+
+/* ── LABEL ME TIMERS ── */
+let lmActivityInterval=null, lmActivitySecs=180, lmActivityRunning=false;
+let lmClassInterval=null,    lmClassSecs=600,    lmClassRunning=false;
+
+function lmFmt(s){const m=Math.floor(s/60),ss=s%60;return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');}
+
+/* ── LABEL ME SLIDE NAV ── */
+let lmCurrentSlide = 0;
+const LM_TOTAL = 4;
+
+function lmGoSlide(idx){
+  const prev = lmCurrentSlide;
+  lmCurrentSlide = Math.max(0, Math.min(LM_TOTAL - 1, idx));
+  document.querySelectorAll('.lm-slide').forEach((s, i) => {
+    if(i === lmCurrentSlide){
+      s.style.opacity = '1';
+      s.style.transform = 'translateX(0%)';
+    } else if(i < lmCurrentSlide){
+      s.style.opacity = '0';
+      s.style.transform = 'translateX(-100%)';
+    } else {
+      s.style.opacity = '0';
+      s.style.transform = 'translateX(100%)';
+    }
+  });
+  document.querySelectorAll('.lm-dot').forEach((d,i) => d.classList.toggle('lm-dot-active', i === lmCurrentSlide));
+  document.getElementById('lm-prev-btn').style.opacity = lmCurrentSlide === 0 ? '0.3' : '1';
+  document.getElementById('lm-next-btn').style.opacity = lmCurrentSlide === LM_TOTAL-1 ? '0.3' : '1';
+}
+function lmNext(){ lmGoSlide(lmCurrentSlide + 1); }
+function lmPrev(){ lmGoSlide(lmCurrentSlide - 1); }
+
+function lmTimerStart(){
+  if(lmActivityRunning)return;
+  if(lmActivitySecs<=0){lmActivitySecs=180;document.getElementById('lm-timer-display').textContent=lmFmt(lmActivitySecs);}
+  lmActivityRunning=true;
+  lmActivityInterval=setInterval(()=>{
+    lmActivitySecs--;
+    const el=document.getElementById('lm-timer-display');
+    el.textContent=lmFmt(lmActivitySecs);
+    if(lmActivitySecs<=30){el.style.color='#ff6b6b';}
+    else{el.style.color='#fff';}
+    if(lmActivitySecs<=0){
+      clearInterval(lmActivityInterval);lmActivityRunning=false;
+      el.textContent='00:00';el.style.color='#ff4444';
+      lmBuzz();
+    }
+  },1000);
+}
+function lmTimerReset(){
+  clearInterval(lmActivityInterval);lmActivityRunning=false;lmActivitySecs=180;
+  const el=document.getElementById('lm-timer-display');
+  if(el){el.textContent='03:00';el.style.color='#fff';}
+}
+
+function lmClassStart(){
+  if(lmClassRunning)return;
+  if(lmClassSecs<=0){lmClassSecs=600;document.getElementById('lm-class-display').textContent=lmFmt(lmClassSecs);}
+  lmClassRunning=true;
+  lmClassInterval=setInterval(()=>{
+    lmClassSecs--;
+    const el=document.getElementById('lm-class-display');
+    el.textContent=lmFmt(lmClassSecs);
+    if(lmClassSecs<=60){el.style.color='#ff6b6b';}
+    else{el.style.color='#fff';}
+    if(lmClassSecs<=0){
+      clearInterval(lmClassInterval);lmClassRunning=false;
+      el.textContent='00:00';el.style.color='#ff4444';
+      lmBuzz();
+    }
+  },1000);
+}
+function lmClassReset(){
+  clearInterval(lmClassInterval);lmClassRunning=false;lmClassSecs=600;
+  const el=document.getElementById('lm-class-display');
+  if(el){el.textContent='10:00';el.style.color='#fff';}
+}
+
+function lmBuzz(){
+  try{
+    const ac=new AudioContext();
+    const osc=ac.createOscillator();const g=ac.createGain();
+    osc.connect(g);g.connect(ac.destination);
+    osc.frequency.setValueAtTime(880,ac.currentTime);
+    g.gain.setValueAtTime(0.3,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.6);
+    osc.start();osc.stop(ac.currentTime+0.6);
+  }catch(e){}
+}
+
+/* ══ UNSCRAMBLE — ONE PER SLIDE ══ */
+const US_ANSWERS={1:'TROPOSPHERE',2:'STRATOSPHERE',3:'MESOSPHERE',4:'THERMOSPHERE',5:'EXOSPHERE'};
+const US_NAMES  ={1:'Troposphere',2:'Stratosphere',3:'Mesosphere',4:'Thermosphere',5:'Exosphere'};
+let usDone={1:false,2:false,3:false,4:false,5:false};
+let usScore=0;
+let usCurrentSlide='intro';
+
+function usGoToSlide(target){
+  // hide current
+  const allSlides=document.querySelectorAll('#screen-unscramble .us-slide');
+  allSlides.forEach(s=>{
+    s.classList.remove('us-slide-active','us-slide-exited');
+    s.classList.add('us-slide-exited');
+  });
+  // show target
+  const targetId=target==='end'?'us-slide-end':(target==='intro'?'us-slide-intro':'us-slide-'+target);
+  const targetEl=document.getElementById(targetId);
+  if(targetEl){
+    targetEl.classList.remove('us-slide-exited');
+    targetEl.classList.add('us-slide-active');
+    usCurrentSlide=target;
+    // focus input if question slide
+    if(typeof target==='number'){
+      setTimeout(()=>{const inp=document.getElementById('usi-'+target);if(inp&&!inp.disabled)inp.focus();},700);
+    }
+    // update all score badges
+    syncScoreBadges();
+    if(target==='end') buildUsEndScreen();
+  }
+}
+
+function syncScoreBadges(){
+  const total=Object.values(usDone).filter(Boolean).length;
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('us-sc-'+i);
+    if(el)el.textContent=total+' / 5';
+  }
+}
+
+function usCheck(n){
+  if(usDone[n])return;
+  const inp=document.getElementById('usi-'+n);
+  const fb=document.getElementById('usfb-'+n);
+  const val=inp.value.trim().toUpperCase().replace(/\s+/g,'');
+  if(!val){fb.textContent='⚠️ Type your answer first!';fb.className='us-feedback ufb-err';return;}
+  if(val===US_ANSWERS[n]){
+    usDone[n]=true;usScore++;
+    inp.classList.remove('uwrong');inp.classList.add('ucorrect');inp.disabled=true;
+    document.getElementById('usbtn-'+n).disabled=true;
+    fb.textContent='✅ Correct! Great job!';fb.className='us-feedback ufb-ok';
+    const nextBtn=document.getElementById('usnext-'+n);
+    if(nextBtn)nextBtn.classList.add('show');
+    syncScoreBadges();
+  }else{
+    inp.classList.remove('ucorrect');inp.classList.add('uwrong');
+    fb.textContent='❌ Not quite — check the letters and try again!';fb.className='us-feedback ufb-err';
+    setTimeout(()=>{inp.classList.remove('uwrong');inp.value='';inp.focus();},700);
+  }
+}
+
+function buildUsEndScreen(){
+  document.getElementById('us-final-score').textContent=usScore;
+  const row=document.getElementById('us-recap-row');row.innerHTML='';
+  Object.entries(US_NAMES).forEach(([k,name],i)=>{
+    const chip=document.createElement('div');chip.className='us-recap-chip';
+    chip.style.animationDelay=(i*0.1)+'s';chip.textContent=name;
+    if(usDone[k])chip.style.borderColor='#4ade80';
+    row.appendChild(chip);
+  });
+  setTimeout(launchConfetti,400);
+}
+
+function usReset(){
+  usScore=0;
+  for(let i=1;i<=5;i++){
+    usDone[i]=false;
+    const inp=document.getElementById('usi-'+i);if(inp){inp.value='';inp.disabled=false;inp.classList.remove('ucorrect','uwrong');}
+    const fb=document.getElementById('usfb-'+i);if(fb){fb.textContent='';fb.className='us-feedback';}
+    const btn=document.getElementById('usbtn-'+i);if(btn)btn.disabled=false;
+    const nxt=document.getElementById('usnext-'+i);if(nxt)nxt.classList.remove('show');
+  }
+  document.getElementById('us-key-panel').classList.remove('show');
+  usGoToSlide('intro');
+}
+
+function toggleUsKey(){document.getElementById('us-key-panel').classList.toggle('show');}
+
+/* ══ GENERALIZATION ══ */
+function genReset(){
+  for(let i=1;i<=3;i++){
+    const block=document.getElementById('gen-block-'+i);
+    block.classList.remove('gen-active','gen-done');
+    document.getElementById('gen-panel-'+i).classList.remove('revealed');
+    const rb=document.getElementById('gen-reveal-'+i);if(rb){rb.style.display='';rb.disabled=false;}
+    const nb=document.getElementById('gen-next-'+i);if(nb)nb.classList.remove('show');
+    block.querySelectorAll('.gen-done-badge').forEach(b=>b.remove());
+    const dot=document.getElementById('gdot-'+i);if(dot)dot.classList.remove('g-active','g-done');
+  }
+  document.getElementById('gen-block-1').classList.add('gen-active');
+  document.getElementById('gdot-1').classList.add('g-active');
+  const wu=document.getElementById('gen-wrapup');if(wu)wu.classList.remove('visible');
+  const hint=document.getElementById('gen-tap-hint');if(hint)hint.style.opacity='1';
+  const inner=document.getElementById('gen-inner');if(inner)inner.scrollTo({top:0,behavior:'smooth'});
+}
+function genReveal(n){
+  document.getElementById('gen-panel-'+n).classList.add('revealed');
+  const rb=document.getElementById('gen-reveal-'+n);if(rb)rb.disabled=true;
+  const nb=document.getElementById('gen-next-'+n);if(nb)nb.classList.add('show');
+  const hint=document.getElementById('gen-tap-hint');if(hint)hint.style.opacity='0';
+  setTimeout(()=>document.getElementById('gen-panel-'+n).scrollIntoView({behavior:'smooth',block:'nearest'}),200);
+}
+function genUnlockNext(nextN){
+  const pN=nextN-1;
+  const pB=document.getElementById('gen-block-'+pN);
+  pB.classList.remove('gen-active');pB.classList.add('gen-done');
+  const badge=document.createElement('div');badge.className='gen-done-badge';badge.innerHTML='✅ Answered!';
+  pB.appendChild(badge);
+  const pD=document.getElementById('gdot-'+pN);if(pD){pD.classList.remove('g-active');pD.classList.add('g-done');}
+  const nB=document.getElementById('gen-block-'+nextN);nB.classList.add('gen-active');
+  const nD=document.getElementById('gdot-'+nextN);if(nD)nD.classList.add('g-active');
+  setTimeout(()=>nB.scrollIntoView({behavior:'smooth',block:'center'}),300);
+}
+function genShowComplete(){
+  const b3=document.getElementById('gen-block-3');b3.classList.remove('gen-active');b3.classList.add('gen-done');
+  const badge=document.createElement('div');badge.className='gen-done-badge';badge.innerHTML='✅ Answered!';b3.appendChild(badge);
+  const d3=document.getElementById('gdot-3');if(d3){d3.classList.remove('g-active');d3.classList.add('g-done');}
+  const wu=document.getElementById('gen-wrapup');if(wu){wu.classList.add('visible');setTimeout(()=>wu.scrollIntoView({behavior:'smooth',block:'center'}),400);}
+  launchConfetti();
+}
+
+/* ══ KEYBOARD ══ */
+let activeKeyTarget='home';
+window.addEventListener('keydown',e=>{
+  if(activeKeyTarget==='journey'){
+    if(e.key==='ArrowUp'){e.preventDefault();goUp();}
+    else if(e.key==='ArrowDown'||e.key===' '){e.preventDefault();goDown();}
+  }
+});
+
+/* ══ HOME CANVAS ══ */
+(function(){
+  const canvas=document.getElementById('home-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+  const stars=Array.from({length:260},()=>({x:Math.random()*2000,y:Math.random()*1200,r:Math.random()*1.5+0.2,phase:Math.random()*Math.PI*2,sp:Math.random()*0.5+0.2,col:`hsl(${Math.random()*60+200},80%,90%)`}));
+  let shooters=[],t=0;
+  setInterval(()=>shooters.push({x:Math.random()*2000,y:Math.random()*600,vx:9+Math.random()*5,vy:4+Math.random()*3,life:1}),3000);
+  (function loop(){
+    requestAnimationFrame(loop);t+=0.015;ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{const a=0.2+0.7*Math.abs(Math.sin(t*s.sp+s.phase));ctx.beginPath();ctx.arc(s.x%canvas.width,s.y%canvas.height,s.r,0,Math.PI*2);ctx.fillStyle=s.col;ctx.globalAlpha=a;ctx.fill();});
+    shooters=shooters.filter(s=>s.life>0);
+    shooters.forEach(s=>{const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*8,s.y-s.vy*8);g.addColorStop(0,'rgba(255,255,220,0.9)');g.addColorStop(1,'rgba(255,255,220,0)');ctx.globalAlpha=s.life;ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*8,s.y-s.vy*8);ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.life-=0.025;});
+    ctx.globalAlpha=1;
+  })();
+})();
+
+/* ══ JOURNEY ══ */
+const GAUGE_LAYERS=[
+  {label:'Space',       altText:'600+', altUnit:'mi',color:'#ffffff',fillPct:100},
+  {label:'Thermosphere',altText:'86–372',altUnit:'mi',color:'#f43f5e',fillPct:82},
+  {label:'Mesosphere',  altText:'32–85', altUnit:'mi',color:'#8b5cf6',fillPct:58},
+  {label:'Stratosphere',altText:'11–31', altUnit:'mi',color:'#4a8ae6',fillPct:34},
+  {label:'Troposphere', altText:'0–10',  altUnit:'mi',color:'#90d5ff',fillPct:12},
+  {label:'Ground',      altText:'0',     altUnit:'mi',color:'#4ade80',fillPct:0 },
+];
+const flightPathOffsets=[0,-100,-200,-300,-400,-500];
+let jIdx=0,jAnimating=false;
+
+function initJourney(){
+  const ticksEl=document.getElementById('gauge-ticks');
+  GAUGE_LAYERS.forEach((layer,i)=>{const t=document.createElement('div');t.className='gauge-tick';t.id='tick-'+i;t.innerHTML=`<div class="tick-label">${layer.label}</div><div class="tick-line"></div>`;ticksEl.appendChild(t);});
+  buildEarthModel();
+  drawStarField('canvas-space-top',220,true);
+  drawThermoParticles();
+  drawStarField('canvas-meso',60,false);
+  spawnMeteors();
+  buildStratosphere();
+  buildTroposphere();
+  buildGround();
+  updateJourneyButtons();
+  setTimeout(()=>updateGauge(jIdx),200);
+}
+function updateGauge(idx){
+  const layer=GAUGE_LAYERS[idx];
+  const fill=document.getElementById('gauge-bar-fill');
+  fill.style.height=layer.fillPct+'%';fill.style.background=`linear-gradient(to top,${layer.color}cc,${layer.color}44)`;
+  document.getElementById('readout-layer').style.color=layer.color;
+  document.getElementById('readout-layer').textContent=layer.label;
+  document.getElementById('readout-alt').innerHTML=layer.altText+'<span>'+layer.altUnit+'</span>';
+  document.getElementById('gauge-readout').style.borderColor=layer.color;
+  const trackRect=document.getElementById('gauge-bar-track').getBoundingClientRect();
+  const yFrac=1-(layer.fillPct/100);
+  document.getElementById('gauge-readout').style.top=(trackRect.top+yFrac*trackRect.height)+'px';
+  document.getElementById('gauge-readout').style.transform='translateY(-50%)';
+  document.querySelectorAll('.gauge-tick').forEach((el,i)=>{el.classList.toggle('active',i===idx);el.querySelector('.tick-label').style.color=i===idx?layer.color:'';el.querySelector('.tick-line').style.background=i===idx?layer.color:'';});
+}
+function updateJourneyButtons(){
+  const u=document.getElementById('btnUp'),d=document.getElementById('btnDown');
+  u.style.display=jIdx===0?'none':'block';d.style.display=jIdx===5?'none':'block';
+  if(jIdx>0){u.disabled=false;u.innerText=jIdx===1?'▲ Launch to Space':'▲ Launch Upward';}
+  if(jIdx<5){d.disabled=false;d.innerText=jIdx===0?'▼ Dive to Surface':jIdx===4?'▼ Exit to Surface':'▼ Dive Down';}
+}
+function applyJourneyMove(){document.getElementById('presentation').style.transform=`translateY(${flightPathOffsets[jIdx]}vh)`;updateJourneyButtons();updateGauge(jIdx);}
+function goUp(){if(jIdx>0&&!jAnimating){jAnimating=true;jIdx--;applyJourneyMove();const r=document.getElementById('rocket-companion');r.classList.remove('face-down');r.classList.add('face-up','thrusting');setTimeout(()=>{r.classList.remove('thrusting');jAnimating=false;},2000);}}
+function goDown(){if(jIdx===0&&!jAnimating){jAnimating=true;jIdx=4;applyJourneyMove();triggerRocketDown();}else if(jIdx<5&&!jAnimating){jAnimating=true;jIdx++;applyJourneyMove();triggerRocketDown();}}
+function triggerRocketDown(){const r=document.getElementById('rocket-companion');r.classList.remove('face-up');r.classList.add('face-down','thrusting');setTimeout(()=>{r.classList.remove('thrusting');jAnimating=false;},2000);}
+
+function buildEarthModel(){
+  document.querySelectorAll('.earth-model-container').forEach(container=>{
+    const base=document.createElement('div');base.className='earth-shadow-base';
+    const map=document.createElement('div');map.className='earth-map';base.appendChild(map);container.appendChild(base);
+    const ld=[{name:'Troposphere',alt:'0 to 10 mi',temp:'62°F to -60°F',size:200,color:'#90d5ff',speed:8,width:'4px'},{name:'Stratosphere',alt:'11 to 31 mi',temp:'-60°F to 5°F',size:300,color:'#4a8ae6',speed:12,width:'4px'},{name:'Mesosphere',alt:'32 to 85 mi',temp:'5°F to -148°F',size:420,color:'#8b5cf6',speed:18,width:'3px'},{name:'Thermosphere',alt:'86 to 372 mi',temp:'930°F to 3600°F',size:560,color:'#f43f5e',speed:25,width:'3px'},{name:'Exosphere',alt:'310-620 mi',temp:'≈ abs. zero',size:680,color:'#a7a7a7',speed:35,width:'2px'}];
+    const la=[Math.PI*1.50,Math.PI*0.85,Math.PI*1.85,Math.PI*1.15,Math.PI*0.10];
+    const ll=[90,160,90,90,50];
+    ld.forEach((layer,i)=>{
+      const ring=document.createElement('div');ring.className='atm-layer';ring.style.width=layer.size+'px';ring.style.height=layer.size+'px';ring.style.borderColor=layer.color;ring.style.borderWidth=layer.width;ring.style.animation=`spin ${layer.speed}s linear infinite ${i%2===0?'normal':'reverse'}`;container.appendChild(ring);
+      const lbl=document.createElement('div');lbl.className='layer-label';lbl.innerHTML=`<strong>${layer.name}</strong><span style="display:block;font-size:0.82rem;opacity:0.72;margin-bottom:3px;">${layer.alt}</span><span style="display:block;font-size:0.88rem;font-weight:700;letter-spacing:0.3px;">🌡️ ${layer.temp}</span>`;lbl.style.color=layer.color;lbl.style.borderColor=layer.color;lbl.style.borderWidth='2px';lbl.style.borderStyle='solid';
+      const r=layer.size/2,a=la[i];lbl.style.left=`calc(50% + ${Math.cos(a)*r}px)`;lbl.style.top=`calc(50% + ${Math.sin(a)*r}px)`;
+      const line=document.createElement('div');line.className='connector-line';line.style.backgroundColor=layer.color;
+      const len=ll[i];
+      if(i===0){lbl.style.transform=`translate(-50%,calc(-100% - 180px)) rotateX(-65deg)`;lbl.style.textAlign='center';line.style.width='2px';line.style.height='180px';line.style.top='100%';line.style.left='50%';line.style.transform='translateX(-50%)';}
+      else{const ir=Math.cos(a)>=-0.1;if(ir){lbl.style.transform=`translate(${len}px,-50%) rotateX(-65deg)`;line.style.left=`-${len}px`;line.style.width=`${len}px`;}else{lbl.style.transform=`translate(calc(-100% - ${len}px),-50%) rotateX(-65deg)`;line.style.right=`-${len}px`;line.style.width=`${len}px`;}}
+      lbl.appendChild(line);container.appendChild(lbl);
+    });
+  });
+}
+function drawStarField(id,count,shoot){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const stars=Array.from({length:count},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,phase:Math.random()*Math.PI*2,speed:Math.random()*0.6+0.3,color:`hsl(${Math.random()*60+200},80%,90%)`}));
+  let shooters=[];if(shoot)setInterval(()=>shooters.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height*0.5,vx:8+Math.random()*6,vy:4+Math.random()*3,life:1}),2400);
+  let t=0;(function loop(){requestAnimationFrame(loop);t+=0.018;ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{const a=0.3+0.7*Math.abs(Math.sin(t*s.speed+s.phase));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=a;ctx.fill();});shooters=shooters.filter(s=>s.life>0);shooters.forEach(s=>{const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*8,s.y-s.vy*8);g.addColorStop(0,'rgba(255,255,220,0.9)');g.addColorStop(1,'rgba(255,255,220,0)');ctx.globalAlpha=s.life;ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*8,s.y-s.vy*8);ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.life-=0.03;});ctx.globalAlpha=1;})();
+}
+function drawThermoParticles(){
+  const canvas=document.getElementById('canvas-thermo');if(!canvas)return;
+  const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:40},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.5)*0.6,r:Math.random()*3+1,hue:Math.random()<0.5?320:200}));
+  (function loop(){requestAnimationFrame(loop);ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*3);g.addColorStop(0,`hsla(${p.hue},100%,75%,0.9)`);g.addColorStop(1,`hsla(${p.hue},100%,75%,0)`);ctx.beginPath();ctx.arc(p.x,p.y,p.r*3,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();});})();
+}
+function spawnMeteors(){
+  const container=document.getElementById('meteor-container');if(!container)return;
+  function spawn(){const m=document.createElement('div');m.className='meteor';const len=80+Math.random()*160;m.style.width=len+'px';m.style.top=Math.random()*60+'%';m.style.left=Math.random()*70+'%';const dur=0.6+Math.random()*1.2;m.style.animationDuration=dur+'s';m.style.animationDelay=Math.random()*4+'s';m.style.opacity='0';container.appendChild(m);setTimeout(()=>m.remove(),(dur+4)*1000+500);}
+  for(let i=0;i<18;i++)spawn();setInterval(spawn,800);
+}
+function buildStratosphere(){
+  const container=document.getElementById('uv-container');if(!container)return;
+  const uvColors=['#c084fc','#818cf8','#38bdf8','#a78bfa'];
+  for(let i=0;i<18;i++){const r=document.createElement('div');r.className='uv-ray';r.style.left=(3+i*5.5)+'%';r.style.height=(30+Math.random()*40)+'%';r.style.background=`linear-gradient(to bottom,${uvColors[i%uvColors.length]}88,transparent)`;r.style.animationDuration=(2+Math.random()*3)+'s';r.style.animationDelay=Math.random()*3+'s';container.appendChild(r);}
+  const canvas=document.getElementById('canvas-strat');if(!canvas)return;
+  const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const crystals=Array.from({length:35},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.3,vy:0.15+Math.random()*0.25,r:1+Math.random()*2.5,alpha:0.3+Math.random()*0.5}));
+  (function loop(){requestAnimationFrame(loop);ctx.clearRect(0,0,canvas.width,canvas.height);crystals.forEach(c=>{c.x+=c.vx;c.y+=c.vy;if(c.y>canvas.height){c.y=0;c.x=Math.random()*canvas.width;}ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fillStyle=`rgba(180,230,255,${c.alpha})`;ctx.fill();ctx.strokeStyle=`rgba(200,240,255,${c.alpha*0.5})`;ctx.lineWidth=0.8;ctx.beginPath();ctx.moveTo(c.x-c.r*2,c.y);ctx.lineTo(c.x+c.r*2,c.y);ctx.stroke();ctx.beginPath();ctx.moveTo(c.x,c.y-c.r*2);ctx.lineTo(c.x,c.y+c.r*2);ctx.stroke();});})();
+}
+function buildTroposphere(){
+  const cloudC=document.getElementById('cloud-container'),rainC=document.getElementById('rain-container');if(!cloudC||!rainC)return;
+  const cloudColors=['rgba(255,255,255,0.55)','rgba(200,230,255,0.5)','rgba(180,200,255,0.45)'];
+  function spawnCloud(){const c=document.createElement('div');c.className='cloud-puff';const w=200+Math.random()*300,h=80+Math.random()*120;c.style.width=w+'px';c.style.height=h+'px';c.style.top=(10+Math.random()*70)+'%';c.style.left='-'+w+'px';c.style.background=cloudColors[Math.floor(Math.random()*cloudColors.length)];const dur=18+Math.random()*20;c.style.animationDuration=dur+'s';c.style.animationDelay=Math.random()*-18+'s';cloudC.appendChild(c);setTimeout(()=>c.remove(),(dur+18)*1000);}
+  for(let i=0;i<12;i++)spawnCloud();setInterval(spawnCloud,3000);
+  for(let i=0;i<4;i++){const l=document.createElement('div');l.className='lightning';l.style.left=(10+i*22)+'%';l.style.top=(10+Math.random()*30)+'%';l.style.height=(80+Math.random()*120)+'px';l.style.animationDelay=Math.random()*8+'s';l.style.animationDuration=(6+Math.random()*6)+'s';cloudC.appendChild(l);}
+  for(let i=0;i<60;i++){const r=document.createElement('div');r.className='raindrop';r.style.left=Math.random()*100+'%';const h=10+Math.random()*20;r.style.height=h+'px';const dur=0.6+Math.random()*0.8;r.style.animationDuration=dur+'s';r.style.animationDelay=Math.random()*-2+'s';rainC.appendChild(r);}
+  const canvas=document.getElementById('canvas-tropo');if(!canvas)return;const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);let t=0;
+  (function loop(){requestAnimationFrame(loop);t+=0.003;ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<3;i++){const x=canvas.width*(0.2+i*0.3+0.08*Math.sin(t+i));const y=canvas.height*(0.3+0.1*Math.cos(t*0.7+i));const g=ctx.createRadialGradient(x,y,0,x,y,180+60*Math.sin(t+i));g.addColorStop(0,'rgba(255,255,255,0.08)');g.addColorStop(1,'transparent');ctx.beginPath();ctx.ellipse(x,y,220+40*Math.sin(t+i),90,0,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}})();
+}
+function buildGround(){
+  const gs=document.getElementById('ground-surface');if(!gs)return;
+  const trees=['🌲','🌳','🌴','🌵','🌿'];
+  for(let i=0;i<14;i++){const t=document.createElement('div');t.className='ground-tree';t.textContent=trees[i%trees.length];t.style.left=(i*7+Math.random()*4)+'%';t.style.fontSize=(2+Math.random()*1.5)+'rem';t.style.animationDelay=Math.random()*4+'s';t.style.animationDuration=(3+Math.random()*3)+'s';gs.appendChild(t);}
+  for(let i=0;i<5;i++){const d=document.createElement('div');d.className='ground-detail';d.style.width=(80+Math.random()*100)+'px';d.style.height=(30+Math.random()*40)+'px';d.style.left=Math.random()*80+'%';d.style.top=(10+Math.random()*50)+'%';gs.appendChild(d);}
+  const bc=document.getElementById('bird-container');if(!bc)return;
+  const birdEmojis=['🦅','🦜','🐦'];
+  for(let i=0;i<5;i++){const b=document.createElement('div');b.className='bird';b.textContent=birdEmojis[i%birdEmojis.length];b.style.top=(15+i*8)+'%';const dur=8+Math.random()*6;b.style.animationDuration=dur+'s';b.style.animationDelay=Math.random()*-8+'s';bc.appendChild(b);}
+  const canvas=document.getElementById('canvas-ground');if(!canvas)return;const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const dust=Array.from({length:50},()=>({x:Math.random()*1000,y:Math.random()*400,vx:(Math.random()-0.5)*0.3,vy:-0.2-Math.random()*0.4,r:1+Math.random()*2,alpha:0.2+Math.random()*0.4}));
+  (function loop(){requestAnimationFrame(loop);ctx.clearRect(0,0,canvas.width,canvas.height);dust.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.y<0){d.y=canvas.height;d.x=Math.random()*canvas.width;}ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle=`rgba(180,255,120,${d.alpha})`;ctx.fill();});})();
+}
+
+/* ══ ACTIVITY ══ */
+const QDATA=[
+  {n:1,answer:'ATMOSPHERE', cipher:[1,'T','M',4,'S','P','H',2,'R',2], hint:'💡 The layer of gases wrapping around our entire planet!', color:'#60a5fa'},
+  {n:2,answer:'TEMPERATURE',cipher:['T',2,'M','P',2,'R',1,'T',5,'R',2],hint:'💡 Measured in degrees — think weather forecasts!',color:'#f87171'},
+  {n:3,answer:'ALTITUDE',   cipher:[1,'L','T',3,'T',5,'D',2],         hint:'💡 How HIGH above sea level you are!',color:'#4ade80'},
+];
+const VOWEL_MAP={1:'A',2:'E',3:'I',4:'O',5:'U'};
+let actScore=0,actDone=[false,false,false],actCurrentSlide=0;
+const ACT_SLIDES=['slide-intro','slide-q1','slide-q2','slide-q3','slide-end'];
+
+function initActivity(){
+  const dotsEl=document.getElementById('act-step-dots');
+  for(let i=0;i<3;i++){const d=document.createElement('div');d.className='adot';d.id='adot-'+i;dotsEl.appendChild(d);}
+  buildCiphers();
+  updateActDots(0);updateActProgress(0);
+  makeActStarCanvas('acanvas-intro',200,true);
+  makeActStarCanvas('acanvas-q1',100,false);
+  makeActParticles('acanvas-q2',50,['#ff6b6b66','#ffd93d66','#ff8c4266']);
+  makeActStarCanvas('acanvas-q3',70,false);
+  makeActParticles('acanvas-q3',25,['#4ade8055','#86efac55']);
+  makeActStarCanvas('acanvas-end',200,true);
+}
+function buildCiphers(){
+  QDATA.forEach(q=>{
+    const row=document.getElementById('cipher-'+q.n);if(!row)return;row.innerHTML='';
+    q.cipher.forEach((tile,ti)=>{
+      const isNum=typeof tile==='number';
+      const grp=document.createElement('div');grp.className='tile-group-act';
+      const top=document.createElement('div');top.className='cipher-top-act '+(isNum?'num-tile-act':'letter-tile-act');top.textContent=tile;
+      const inp=document.createElement('input');inp.className='answer-input-act'+(isNum?'':' prefilled');
+      inp.id='ainp-'+q.n+'-'+ti;inp.maxLength=1;inp.type='text';inp.autocomplete='off';inp.spellcheck=false;
+      inp.dataset.q=q.n;inp.dataset.t=ti;inp.dataset.answer=isNum?VOWEL_MAP[tile]:tile;
+      if(!isNum){inp.value=tile;inp.disabled=true;}
+      else{
+        inp.addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(-1);});
+        inp.addEventListener('keydown',e=>{if(e.key==='Enter')actCheck(q.n);if(e.key.length===1&&e.key.match(/[a-zA-Z]/)){setTimeout(()=>{const ni=findNextBlank(q,ti);if(ni!==null){const next=document.getElementById('ainp-'+q.n+'-'+ni);if(next)next.focus();}},60);}});
+      }
+      grp.appendChild(top);grp.appendChild(inp);row.appendChild(grp);
+    });
+  });
+}
+function findNextBlank(q,cur){for(let i=cur+1;i<q.cipher.length;i++){if(typeof q.cipher[i]==='number')return i;}return null;}
+function actGoToSlide(idx){
+  const prev=ACT_SLIDES[actCurrentSlide],next=ACT_SLIDES[idx];
+  document.getElementById(prev).classList.add('exited');document.getElementById(prev).classList.remove('active');
+  document.getElementById(next).classList.add('active');document.getElementById(next).classList.remove('exited');
+  actCurrentSlide=idx;updateActDots(idx);updateActProgress(idx);
+  document.getElementById('act-score-val').textContent=actScore;
+  if(idx>=1&&idx<=3){setTimeout(()=>{const q=QDATA[idx-1];const fb=q.cipher.findIndex(t=>typeof t==='number');if(fb!==-1){const inp=document.getElementById('ainp-'+q.n+'-'+fb);if(inp&&!inp.disabled)inp.focus();}},1200);}
+}
+function actStart(){actGoToSlide(1);}
+function actNext(qNum){if(qNum<3)actGoToSlide(qNum+1);else actShowEnd();}
+function actShowEnd(){
+  document.getElementById('act-final-score').textContent=actScore;
+  const recap=document.getElementById('answers-recap');recap.innerHTML='';
+  QDATA.forEach((q,i)=>{const chip=document.createElement('div');chip.className='recap-chip-act';chip.style.animationDelay=(i*0.15)+'s';chip.style.borderColor=q.color;chip.style.color=q.color;chip.textContent=q.answer;recap.appendChild(chip);});
+  actGoToSlide(4);setTimeout(launchConfetti,600);
+}
+function actRestart(){
+  actScore=0;actDone=[false,false,false];
+  document.getElementById('act-score-val').textContent='0';
+  ACT_SLIDES.forEach(id=>{const el=document.getElementById(id);el.classList.remove('active','exited');});
+  document.getElementById('slide-intro').classList.add('active');
+  buildCiphers();
+  QDATA.forEach(q=>{
+    const fb=document.getElementById('fb-'+q.n);if(fb){fb.textContent='';fb.className='feedback-act';}
+    const rev=document.getElementById('reveal-'+q.n);if(rev)rev.style.display='none';
+    const nb=document.getElementById('next-'+q.n);if(nb){nb.style.display='none';nb.disabled=false;}
+    const chk=document.querySelector('#qc-'+q.n+' .abtn-check');if(chk)chk.disabled=false;
+  });
+  actCurrentSlide=0;updateActDots(0);updateActProgress(0);
+}
+function updateActDots(idx){for(let i=0;i<3;i++){const d=document.getElementById('adot-'+i);if(!d)continue;d.classList.remove('done','current');const qi=i+1;if(qi<idx)d.classList.add('done');else if(qi===idx)d.classList.add('current');}}
+function updateActProgress(idx){document.getElementById('act-progress-fill').style.width=Math.min((idx/4)*100,100)+'%';}
+function actCheck(qNum){
+  if(actDone[qNum-1])return;
+  const q=QDATA[qNum-1];let allFilled=true,allCorrect=true;
+  q.cipher.forEach((tile,ti)=>{if(typeof tile==='number'){const inp=document.getElementById('ainp-'+qNum+'-'+ti);if(!inp.value.trim()){allFilled=false;return;}const correct=VOWEL_MAP[tile];if(inp.value.toUpperCase()===correct){inp.classList.remove('wrong');inp.classList.add('correct');}else{inp.classList.remove('correct');inp.classList.add('wrong');allCorrect=false;}}});
+  const fb=document.getElementById('fb-'+qNum);
+  if(!allFilled){fb.textContent='⚠️ Fill in all the blanks first!';fb.className='feedback-act fb-hint2';return;}
+  if(allCorrect){
+    actDone[qNum-1]=true;actScore++;document.getElementById('act-score-val').textContent=actScore;
+    q.cipher.forEach((tile,ti)=>{const inp=document.getElementById('ainp-'+qNum+'-'+ti);if(inp)inp.disabled=true;});
+    fb.textContent='';fb.className='feedback-act fb-ok2';
+    const rev=document.getElementById('reveal-'+qNum);rev.style.display='block';rev.style.animation='none';void rev.offsetWidth;rev.style.animation='wordPop2 0.5s cubic-bezier(0.34,1.56,0.64,1) both';
+    document.getElementById('next-'+qNum).style.display='flex';
+    const chk=document.querySelector('#qc-'+qNum+' .abtn-check');if(chk)chk.disabled=true;
+  }else{
+    fb.textContent='❌ Some letters are wrong — try again!';fb.className='feedback-act fb-err2';
+    setTimeout(()=>{q.cipher.forEach((tile,ti)=>{if(typeof tile==='number'){const inp=document.getElementById('ainp-'+qNum+'-'+ti);if(inp.classList.contains('wrong')){inp.value='';inp.classList.remove('wrong');}}});const fb2=q.cipher.findIndex(t=>typeof t==='number');if(fb2!==-1)document.getElementById('ainp-'+qNum+'-'+fb2)?.focus();},600);
+  }
+}
+function actHint(qNum){const fb=document.getElementById('fb-'+qNum);fb.textContent=QDATA[qNum-1].hint;fb.className='feedback-act fb-hint2';}
+
+function launchConfetti(){
+  const colors=['#FFD93D','#FF6B6B','#60a5fa','#4ade80','#c084fc','#fb923c'];
+  for(let i=0;i<90;i++){setTimeout(()=>{const p=document.createElement('div');p.className='confetti-piece';p.style.left=Math.random()*100+'vw';p.style.top='-20px';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.width=(6+Math.random()*10)+'px';p.style.height=(6+Math.random()*10)+'px';p.style.animationDuration=(1.8+Math.random()*2.5)+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),5000);},i*28);}
+}
+
+function makeActStarCanvas(id,count,shoot){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const stars=Array.from({length:count},()=>({x:Math.random()*2000,y:Math.random()*1200,r:Math.random()*1.5+0.3,phase:Math.random()*Math.PI*2,sp:Math.random()*0.5+0.3}));
+  let shooters=[],t=0;if(shoot)setInterval(()=>shooters.push({x:Math.random()*2000,y:Math.random()*600,vx:7+Math.random()*5,vy:3+Math.random()*3,life:1}),2800);
+  (function loop(){requestAnimationFrame(loop);t+=0.015;ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{const a=0.2+0.7*Math.abs(Math.sin(t*s.sp+s.phase));ctx.beginPath();ctx.arc(s.x%canvas.width,s.y%canvas.height,s.r,0,Math.PI*2);ctx.fillStyle='#fff';ctx.globalAlpha=a;ctx.fill();});shooters=shooters.filter(s=>s.life>0);shooters.forEach(s=>{const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*8,s.y-s.vy*8);g.addColorStop(0,'rgba(255,255,220,0.9)');g.addColorStop(1,'rgba(255,255,220,0)');ctx.globalAlpha=s.life;ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*8,s.y-s.vy*8);ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.life-=0.03;});ctx.globalAlpha=1;})();
+}
+function makeActParticles(id,count,colors){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const ctx=canvas.getContext('2d');function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:count},()=>({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-0.5)*0.5,vy:-0.4-Math.random()*0.4,r:2+Math.random()*4,color:colors[Math.floor(Math.random()*colors.length)]}));
+  (function loop(){requestAnimationFrame(loop);ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.y<-10){p.y=canvas.height;p.x=Math.random()*canvas.width;}ctx.beginPath();ctx.arc(p.x%canvas.width,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.globalAlpha=0.6;ctx.fill();});ctx.globalAlpha=1;})();
+}
+
+/* ══ HAMBURGER ══ */
+function toggleDrawer(){
+  const d=document.getElementById('nav-drawer'),btn=document.getElementById('nav-hamburger');
+  if(d.classList.contains('open'))closeDrawer();
+  else{d.classList.add('open');btn.textContent='✕';}
+}
+function closeDrawer(){
+  const d=document.getElementById('nav-drawer'),btn=document.getElementById('nav-hamburger');
+  d.classList.remove('open');btn.textContent='☰';
+}
+document.addEventListener('click',e=>{
+  const d=document.getElementById('nav-drawer'),btn=document.getElementById('nav-hamburger');
+  if(d.classList.contains('open')&&!d.contains(e.target)&&e.target!==btn)closeDrawer();
+});
+</script>
+</body>
+</html>
